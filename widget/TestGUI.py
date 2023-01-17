@@ -17,7 +17,6 @@ class MainWindow(QWidget):
 
         user_bar = UserBar()
         tab_widget = TabWidget()
-
         user_bar.userChanged.connect(tab_widget.user_changed_slot)
 
         tab_layout.addWidget(user_bar)
@@ -35,22 +34,27 @@ class TabWidget(QTabWidget):
 
         self.user_tab = QWidget()
         self.developer_tab = QWidget()
+        self.report_tab = QWidget()
 
         self.addTab(self.user_tab, 'User')
         self.addTab(self.developer_tab, 'Developer')
+        self.addTab(self.report_tab, 'Report')
 
-        layout = QVBoxLayout()
+        user_layout = QVBoxLayout()
         self.user_group = UserGroup()
-        layout.addWidget(self.user_group)
-        self.user_tab.setLayout(layout)
+        user_layout.addWidget(self.user_group)
+        self.user_tab.setLayout(user_layout)
 
-        layout = QVBoxLayout()
+        dev_layout = QVBoxLayout()
         self.dev_group = DevGroup()
-        layout.addWidget(self.dev_group)
-        self.developer_tab.setLayout(layout)
+        dev_layout.addWidget(self.dev_group)
+        self.developer_tab.setLayout(dev_layout)
+
+        report_layout = QVBoxLayout()
+        report_layout.addWidget(ReportGroup())
+        self.report_tab.setLayout(report_layout)
 
     def user_changed_slot(self, username):
-        print('tab: ' + str(username))
         self.user_group.user_change_slot(username)
         self.dev_group.user_change_slot(username)
 
@@ -125,9 +129,38 @@ class DevGroup(QWidget):
         return layout
 
     def user_change_slot(self, username):
-        print("dev group: " + username)
         self.hand_dev.user_changed_slot(username)
         self.arm_dev.user_changed_slot(username)
+
+
+class ReportGroup(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+
+        hand_box = QGroupBox("Hand")
+        hand_box.setCheckable(True)
+        hand_box.setLayout(self.hand_layout())
+        layout.addWidget(hand_box)
+
+        arm_box = QGroupBox("Arm")
+        arm_box.setCheckable(True)
+        arm_box.setLayout(self.arm_layout())
+        layout.addWidget(arm_box)
+
+        self.show()
+
+    def hand_layout(self):
+        layout = QVBoxLayout()
+        # layout.addWidget(HandReport())
+        return layout
+
+    def arm_layout(self):
+        layout = QVBoxLayout()
+        # layout.addWidget(ArmReport())
+        return layout
 
 
 class UnityWidget(QWidget):

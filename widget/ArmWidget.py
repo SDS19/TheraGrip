@@ -3,7 +3,7 @@ from PyQt5.Qt import *
 from widget.ArmWorker import *
 from widget.UserWidget import UserHistory
 
-test = False
+test = True
 
 
 class ArmUser(QWidget):
@@ -563,7 +563,109 @@ class ArmDev(QWidget):
         QMessageBox.information(self, "Done!", "Arm test record saved success!")
 
 
+class ArmReport(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.username = 'demo'
+
+        self.list()
+        self.init()
+        self.show()
+
+    def user_changed_slot(self, username):
+        self.username = username
+        print("arm report: " + username)
+
+    def list(self):
+        self.force_x = []
+        self.force_y = []
+
+        self.position_x = []
+        self.position_y = []
+
+        self.velocity_x = []
+        self.velocity_y = []
+
+    def init(self):
+        self.setWindowIcon(QIcon('icon/arm.PNG'))
+        self.setWindowTitle('Arm Report')
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        layout.addLayout(self.info_layout())
+
+    def info_layout(self):
+        layout = QGridLayout()
+
+        motor_1 = QLabel('Motor 1', self)
+        motor_2 = QLabel('Motor 2', self)
+        motor_1.setAlignment(Qt.AlignCenter)
+        motor_2.setAlignment(Qt.AlignCenter)
+
+        layout.addWidget(motor_1, 0, 1)
+        layout.addWidget(motor_2, 0, 2)
+
+        """ ********** Range ********** """
+
+        range_lab = QLabel('max. Range (mm): ', self)
+
+        self.range_val_1 = QLabel('12%', self)
+        self.range_val_2 = QLabel('15%', self)
+        self.range_val_1.setAlignment(Qt.AlignCenter)
+        self.range_val_2.setAlignment(Qt.AlignCenter)
+
+        self.range_btn = QPushButton('Chart', self)
+        self.range_btn.setEnabled(False)
+        self.range_btn.setToolTip('Display the range test record!')
+        # self.range_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.position_1), to_clean_list(self.position_2), "Motor 1: Position record", "Motor 2: Position record", "position (mm)"))
+
+        layout.addWidget(range_lab, 1, 0)
+        layout.addWidget(self.range_val_1, 1, 1)
+        layout.addWidget(self.range_val_2, 1, 2)
+        layout.addWidget(self.range_btn, 1, 3)
+
+        """ ********** Velocity ********** """
+
+        velo_lab = QLabel('max. Velocity (mm/s): ', self)
+
+        self.velo_val_1 = QLabel('20%', self)
+        self.velo_val_2 = QLabel('23%', self)
+        self.velo_val_1.setAlignment(Qt.AlignCenter)
+        self.velo_val_2.setAlignment(Qt.AlignCenter)
+
+        self.velo_btn = QPushButton('Chart', self)
+        self.velo_btn.setEnabled(False)
+        self.velo_btn.setToolTip('Display the velocity test record!')
+        # self.velo_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.velocity_1), to_clean_list(self.velocity_2), "Motor 1: Velocity record", "Motor 2: Velocity record", "velocity (mm/s)"))
+
+        layout.addWidget(velo_lab, 2, 0)
+        layout.addWidget(self.velo_val_1, 2, 1)
+        layout.addWidget(self.velo_val_2, 2, 2)
+        layout.addWidget(self.velo_btn, 2, 3)
+
+        date = QLabel('Training Date: ', self)
+
+        self.start_date = QLabel('01.01.2023 ~', self)
+        self.end_date = QLabel('01.03.2023', self)
+        self.start_date.setAlignment(Qt.AlignCenter)
+        self.end_date.setAlignment(Qt.AlignCenter)
+
+        self.times = QLabel('8 times', self)
+        self.times.setAlignment(Qt.AlignCenter)
+
+        layout.addWidget(date, 3, 0)
+        layout.addWidget(self.start_date, 3, 1)
+        layout.addWidget(self.end_date, 3, 2)
+        layout.addWidget(self.times, 3, 3)
+
+        return layout
+
+    def add_history(self):
+        pass
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = ArmUser()
+    win = ArmReport()
     sys.exit(app.exec_())

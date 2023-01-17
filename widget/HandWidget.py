@@ -2,7 +2,7 @@ from widget.IOChart import *
 from widget.HandWorker import *
 from widget.UserWidget import UserHistory
 
-test = False
+test = True
 
 
 class HandUser(QWidget):
@@ -183,7 +183,7 @@ class HandUser(QWidget):
 
         """ ********** Range ********** """
 
-        label = QLabel('max. Range (mm): ', self)
+        range_lab = QLabel('max. Range (mm): ', self)
 
         self.range_val_1 = QLabel('0', self)
         self.range_val_2 = QLabel('0', self)
@@ -194,16 +194,15 @@ class HandUser(QWidget):
         self.range_btn.setEnabled(False)
         self.range_btn.setToolTip('Display the range test record!')
         self.range_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.position_1), to_clean_list(self.position_2), "Motor 1: Position record", "Motor 2: Position record", "position (mm)"))
-        # self.range_chart)
 
-        layout.addWidget(label, 1, 0)
+        layout.addWidget(range_lab, 1, 0)
         layout.addWidget(self.range_val_1, 1, 1)
         layout.addWidget(self.range_val_2, 1, 2)
         layout.addWidget(self.range_btn, 1, 3)
 
         """ ********** Velocity ********** """
 
-        label = QLabel('max. Velocity (mm/s): ', self)
+        velo_lab = QLabel('max. Velocity (mm/s): ', self)
 
         self.velo_val_1 = QLabel('0', self)
         self.velo_val_2 = QLabel('0', self)
@@ -215,7 +214,7 @@ class HandUser(QWidget):
         self.velo_btn.setToolTip('Display the velocity test record!')
         self.velo_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.velocity_1), to_clean_list(self.velocity_2), "Motor 1: Velocity record", "Motor 2: Velocity record", "velocity (mm/s)"))
 
-        layout.addWidget(label, 2, 0)
+        layout.addWidget(velo_lab, 2, 0)
         layout.addWidget(self.velo_val_1, 2, 1)
         layout.addWidget(self.velo_val_2, 2, 2)
         layout.addWidget(self.velo_btn, 2, 3)

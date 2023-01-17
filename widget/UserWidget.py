@@ -112,35 +112,6 @@ class UserHistory(QWidget):
         file.open()
 
 
-class UserRecord(QWidget):
-    def __init__(self, username):
-        super().__init__()
-        self.username = username
-
-        self.init()
-        self.show()
-
-    def record(self):
-        self.position_1 = []
-        self.position_2 = []
-
-        self.velocity_1 = []
-        self.velocity_2 = []
-
-        self.force_1 = []
-        self.force_1 = []
-
-    def init(self):
-        layout = QGridLayout()
-        self.setLayout(layout)
-
-    def open_file(self):
-        path = os.path.join(os.path.dirname(__file__), 'user', self.username, 'log', self.obj)
-        file = QFileDialog(self, "Choose the log file", path, "All(*.*)")
-        file.fileSelected.connect(lambda f: load_chart(f))
-        file.open()
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = UserBar()

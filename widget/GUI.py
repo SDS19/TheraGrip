@@ -50,6 +50,10 @@ class TabWidget(QTabWidget):
         dev_layout.addWidget(self.dev_group)
         self.developer_tab.setLayout(dev_layout)
 
+        report_layout = QVBoxLayout()
+        report_layout.addWidget(ReportGroup())
+        self.report_tab.setLayout(report_layout)
+
     def user_changed_slot(self, username):
         self.user_group.user_change_slot(username)
         self.dev_group.user_change_slot(username)
@@ -137,6 +141,36 @@ class DevGroup(QWidget):
     def user_change_slot(self, username):
         self.hand_dev.user_changed_slot(username)
         self.arm_dev.user_changed_slot(username)
+
+
+class ReportGroup(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+
+        hand_box = QGroupBox("Hand")
+        hand_box.setCheckable(True)
+        hand_box.setLayout(self.hand_layout())
+        layout.addWidget(hand_box)
+
+        arm_box = QGroupBox("Arm")
+        arm_box.setCheckable(True)
+        arm_box.setLayout(self.arm_layout())
+        layout.addWidget(arm_box)
+
+        self.show()
+
+    def hand_layout(self):
+        layout = QVBoxLayout()
+        # layout.addWidget(HandReport())
+        return layout
+
+    def arm_layout(self):
+        layout = QVBoxLayout()
+        # layout.addWidget(ArmReport())
+        return layout
 
 
 class UnityWidget(QWidget):
