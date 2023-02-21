@@ -71,11 +71,16 @@ class UserBar(QWidget):
     def mkdir_user(self, username):
         user_path = os.path.join(os.path.dirname(__file__), 'user', username)  # user dir
         if not os.path.exists(user_path):
+
             os.mkdir(user_path)  # make user dir
             os.mkdir(os.path.join(user_path, 'log'))  # make log dir
+            os.mkdir(os.path.join(user_path, 'log', 'hand'))
+            os.mkdir(os.path.join(user_path, 'log', 'arm'))
+
             demo_config = os.path.join(os.path.dirname(__file__), 'user', 'demo', 'config')  # template config dir
             user_config = os.path.join(user_path, 'config')
             shutil.copytree(demo_config, user_config)  # copy config dir
+
             QMessageBox.information(self, "Done!", "New user added success under: \n" + user_path)
         else:
             QMessageBox.information(self, "Error!", "This user exists already!")

@@ -1,3 +1,4 @@
+import sys
 from widget.IOChart import *
 from widget.HandWorker import *
 from widget.UserWidget import UserHistory

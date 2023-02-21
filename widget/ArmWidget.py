@@ -73,13 +73,18 @@ class ArmUser(QWidget):
         layout.addWidget(self.task_button('Task 6'), 1, 2)
         return layout
 
-    def task_button(self, name):
-        config = read_config(name)
-        btn = QPushButton(name)
+    def task_button(self, task):
+        config = read_user_config(task, self.username)
+        btn = QPushButton(task)
         btn.clicked.connect(lambda: self.start(config[0]+', '+config[1], config[2]+', '+config[3], config[4], config[5]))
         return btn
 
     def start(self, point_1, point_2, velocity, times):
+        print(point_1)
+        print(point_2)
+        print(velocity)
+        print(times)
+        
         self.real_time_slot()
 
         p1 = parse_to_list(point_1)
@@ -264,6 +269,8 @@ class ArmDev(QWidget):
     if test:
         def __init__(self):
             super().__init__()
+            self.username = 'demo'
+
             self.init()
             self.show()
             print("test mode")
@@ -280,11 +287,12 @@ class ArmDev(QWidget):
             self.show()
 
     def user_changed_slot(self, username):
-        print("arm dev: " + username)
+        self.username = username
+        print("arm dev: " + self.username)
 
     def list(self):
-        self.current_x = []
-        self.current_y = []
+        self.force_x = []
+        self.force_y = []
 
         self.position_x = []
         self.position_y = []
@@ -302,7 +310,7 @@ class ArmDev(QWidget):
         layout.addLayout(self.column_layout(), 0, 0)
 
         for i in range(6):
-            config = read_config('Task ' + str(i + 1))
+            config = read_user_config('Task ' + str(i + 1), self.username)
             layout.addLayout(self.task_layout('Task ' + str(i + 1), config[0] + ', ' + config[1], config[2] + ', ' + config[3], config[4], config[5]), i + 1, 0)
 
         layout.addLayout(self.info(), 8, 0)
@@ -394,7 +402,7 @@ class ArmDev(QWidget):
         p2 = parse_to_list(point_2)
 
         if len(p1) == 2 and len(p2) == 2:
-            write_config(name, [p1, p2, velocity, times])
+            write_user_config(name, [p1, p2, velocity, times], self.username)
             self.list()  # clear old record
             self.worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
             self.worker.finish.connect(self.save_record_index)
@@ -403,7 +411,7 @@ class ArmDev(QWidget):
             QMessageBox.information(self, "Error!", "Please enter correct range value: (0~350), (0~250)")
 
     def save_record_index(self):  # finish
-        self.index = len(self.current_x)
+        self.index = len(self.force_x)
 
     """ finish ****************************** info widget ****************************** """
 
@@ -457,7 +465,7 @@ class ArmDev(QWidget):
         self.p_btn = QPushButton('Chart', self)
         self.p_btn.setFixedWidth(90)
         self.p_btn.setEnabled(False)
-        self.p_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.position_x[0:self.index]), to_clean_list(self.position_y[0:self.index]), "X Axis: Position record", "Y Axis: Position record", "position (mm)"))
+        self.p_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), clean_position_list(self.position_x[0:self.index]), clean_position_list(self.position_y[0:self.index]), "X Axis: Position record", "Y Axis: Position record", "position (mm)"))
 
         layout.addWidget(p_lab, 2, 0)
         layout.addWidget(self.p_x, 2, 1)
@@ -477,7 +485,7 @@ class ArmDev(QWidget):
         self.f_btn = QPushButton('Chart', self)
         self.f_btn.setFixedWidth(90)
         self.f_btn.setEnabled(False)
-        self.f_btn.pressed.connect(lambda: triple_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_force_list(self.current_x[0:self.index]), to_force_list(self.current_y[0:self.index]), "X Axis: component force", "Y Axis: component force", "resultant force", "force (N)"))
+        self.f_btn.pressed.connect(lambda: triple_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.force_x[0:self.index]), to_clean_list(self.force_y[0:self.index]), "X Axis: component force", "Y Axis: component force", "resultant force", "force (N)"))
 
         layout.addWidget(f_lab, 3, 0)
         layout.addWidget(self.f_x, 3, 1)
@@ -534,11 +542,11 @@ class ArmDev(QWidget):
         self.worker.start()
 
     def info_update_event(self, data):  # test
-        self.current_x.append(data[0][0])
+        self.force_x.append(data[0][0])
         self.position_x.append(data[0][1])
         self.velocity_x.append(data[0][2])
 
-        self.current_y.append(data[1][0])
+        self.force_y.append(data[1][0])
         self.position_y.append(data[1][1])
         self.velocity_y.append(data[1][2])
 
@@ -551,121 +559,19 @@ class ArmDev(QWidget):
         self.v_y.setText(str(data[1][2]))
 
     def save(self):
-        write_log('arm', 'arm_position', self.position_x[0:self.index])
-        write_log('arm', 'arm_position', '\n' + str(self.position_y[0:self.index]))
+        write_user_log(self.username, 'arm', 'position', self.position_x[0:self.index])
+        write_user_log(self.username, 'arm', 'position', '\n' + str(self.position_y[0:self.index]))
 
-        write_log('arm', 'arm_velocity', self.velocity_x[0:self.index])
-        write_log('arm', 'arm_velocity', '\n' + str(self.velocity_y[0:self.index]))
+        write_user_log(self.username, 'arm', 'velocity', self.velocity_x[0:self.index])
+        write_user_log(self.username, 'arm', 'velocity', '\n' + str(self.velocity_y[0:self.index]))
 
-        write_log('arm', 'arm_force', self.current_x[0:self.index])
-        write_log('arm', 'arm_force', '\n' + str(self.current_y[0:self.index]))
+        write_user_log(self.username, 'arm', 'force', self.force_x[0:self.index])
+        write_user_log(self.username, 'arm', 'force', '\n' + str(self.force_y[0:self.index]))
 
         QMessageBox.information(self, "Done!", "Arm test record saved success!")
 
 
-class ArmReport(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.username = 'demo'
-
-        self.list()
-        self.init()
-        self.show()
-
-    def user_changed_slot(self, username):
-        self.username = username
-        print("arm report: " + username)
-
-    def list(self):
-        self.force_x = []
-        self.force_y = []
-
-        self.position_x = []
-        self.position_y = []
-
-        self.velocity_x = []
-        self.velocity_y = []
-
-    def init(self):
-        self.setWindowIcon(QIcon('icon/arm.PNG'))
-        self.setWindowTitle('Arm Report')
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        layout.addLayout(self.info_layout())
-
-    def info_layout(self):
-        layout = QGridLayout()
-
-        motor_1 = QLabel('Motor 1', self)
-        motor_2 = QLabel('Motor 2', self)
-        motor_1.setAlignment(Qt.AlignCenter)
-        motor_2.setAlignment(Qt.AlignCenter)
-
-        layout.addWidget(motor_1, 0, 1)
-        layout.addWidget(motor_2, 0, 2)
-
-        """ ********** Range ********** """
-
-        range_lab = QLabel('max. Range (mm): ', self)
-
-        self.range_val_1 = QLabel('12%', self)
-        self.range_val_2 = QLabel('15%', self)
-        self.range_val_1.setAlignment(Qt.AlignCenter)
-        self.range_val_2.setAlignment(Qt.AlignCenter)
-
-        self.range_btn = QPushButton('Chart', self)
-        self.range_btn.setEnabled(False)
-        self.range_btn.setToolTip('Display the range test record!')
-        # self.range_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.position_1), to_clean_list(self.position_2), "Motor 1: Position record", "Motor 2: Position record", "position (mm)"))
-
-        layout.addWidget(range_lab, 1, 0)
-        layout.addWidget(self.range_val_1, 1, 1)
-        layout.addWidget(self.range_val_2, 1, 2)
-        layout.addWidget(self.range_btn, 1, 3)
-
-        """ ********** Velocity ********** """
-
-        velo_lab = QLabel('max. Velocity (mm/s): ', self)
-
-        self.velo_val_1 = QLabel('20%', self)
-        self.velo_val_2 = QLabel('23%', self)
-        self.velo_val_1.setAlignment(Qt.AlignCenter)
-        self.velo_val_2.setAlignment(Qt.AlignCenter)
-
-        self.velo_btn = QPushButton('Chart', self)
-        self.velo_btn.setEnabled(False)
-        self.velo_btn.setToolTip('Display the velocity test record!')
-        # self.velo_btn.pressed.connect(lambda: dual_plot(time.strftime('%d-%m-%Y %H:%M:%S'), to_clean_list(self.velocity_1), to_clean_list(self.velocity_2), "Motor 1: Velocity record", "Motor 2: Velocity record", "velocity (mm/s)"))
-
-        layout.addWidget(velo_lab, 2, 0)
-        layout.addWidget(self.velo_val_1, 2, 1)
-        layout.addWidget(self.velo_val_2, 2, 2)
-        layout.addWidget(self.velo_btn, 2, 3)
-
-        date = QLabel('Training Date: ', self)
-
-        self.start_date = QLabel('01.01.2023 ~', self)
-        self.end_date = QLabel('01.03.2023', self)
-        self.start_date.setAlignment(Qt.AlignCenter)
-        self.end_date.setAlignment(Qt.AlignCenter)
-
-        self.times = QLabel('8 times', self)
-        self.times.setAlignment(Qt.AlignCenter)
-
-        layout.addWidget(date, 3, 0)
-        layout.addWidget(self.start_date, 3, 1)
-        layout.addWidget(self.end_date, 3, 2)
-        layout.addWidget(self.times, 3, 3)
-
-        return layout
-
-    def add_history(self):
-        pass
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = ArmReport()
+    win = ArmUser()
     sys.exit(app.exec_())

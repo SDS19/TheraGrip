@@ -148,7 +148,7 @@ class D1:
         # return self.SI_unit_factor
 
     def to_byte(self, x):
-        return list(int(x * self.SI_unit_factor).to_bytes(4, byteorder='little'))
+        return list(int(x * self.SI_unit_factor).to_bytes(4, byteorder='little', signed=True))
 
     def profile_position_mode(self, velo, acc, pos):
         self.mode(1)  # Set Profile Position Mode (Byte 19 = 1)
@@ -171,26 +171,22 @@ class D1:
                and self.status() != [0, 0, 0, 0, 0, 15, 1, 43, 13, 0, 0, 0, 96, 65, 0, 0, 0, 0, 2, 8, 22]):
             break
 
-    """ **************************************** read value **************************************** """
+    """ ******************** Nils Hoppe human mode 14.02.2023 ~ 17.02.2023 ******************** """
 
-    def velocity_curve(self, x):
-        return (-5.83397691012945e-14 * math.pow(x, 9) + 4.01458396693356e-11 * math.pow(x, 8) - 9.6248203709691e-9 * math.pow(x, 7) + \
-             1.06977262917339e-6 * math.pow(x, 6) - 5.68239363212274e-5 * math.pow(x, 5) + 1.25022968775769e-3 * math.pow(x, 4) - \
-             1.24822800434351e-2 * math.pow(x, 3) + 0.531322885004075 * math.pow(x, 2) - 0.240497493514033 * x + 0.234808880863676) * 0.5
+    def ProfVeloMode(self, v_list):
+        self.mode(3)
+        self.command(self.enableOperation_array)
+        self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 131, 0, 0, 0, 0, 4, v_list[4], v_list[5], v_list[6], v_list[7]]))
+        self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 132, 0, 0, 0, 0, 4, v_list[4], v_list[5], v_list[6], v_list[7]]))
+        self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 255, 0, 0, 0, 0, 4, v_list[0], v_list[1], v_list[2], v_list[3]]))
 
-    # line 707
-    # def move(self, dist_x, dist_y, velo_acc_x_mat, velo_acc_y_mat, time_list):
-    #     real_time_index = 1
-    #     if dist_x != 0.0 and dist_y != 0.0:
-    #         for i in range(1, sample_num + 1):
-    #             X_Motor.ProfVeloMode(velo_acc_x_mat[i])
-    #             Y_Motor.ProfVeloMode(velo_acc_y_mat[i])
-    #             time.sleep(time_list[i])
-    #
-    #             real_time_list[real_time_index] = time.time()
-    #             real_time_index = real_time_index + 1
-    #
-    #             real_x_velo_array[i] = X_Motor.actualVelocity()
-    #             real_y_velo_array[i] = Y_Motor.actualVelocity()
-    #             real_x_posi_array[i] = X_Motor.actualPosition()
-    #             real_y_posi_array[i] = Y_Motor.actualPosition()
+    def profile_velocity_mode(self, velo, acc):
+        self.mode(3)
+        self.command(self.enableOperation_array)
+        a_byte = self.to_byte(acc)
+        self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 131, 0, 0, 0, 0, 4, a_byte[0], a_byte[1], a_byte[2], a_byte[3]]))
+        self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 132, 0, 0, 0, 0, 4, a_byte[0], a_byte[1], a_byte[2], a_byte[3]]))
+        v_byte = self.to_byte(velo)
+        self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 255, 0, 0, 0, 0, 4, v_byte[0], v_byte[1], v_byte[2], v_byte[3]]))
+
+

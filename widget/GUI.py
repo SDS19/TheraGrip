@@ -1,6 +1,7 @@
 from widget.ArmWidget import *
 from widget.HandWidget import *
 from widget.UserWidget import *
+from widget.ReportWidget import *
 # from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 
@@ -50,9 +51,9 @@ class TabWidget(QTabWidget):
         dev_layout.addWidget(self.dev_group)
         self.developer_tab.setLayout(dev_layout)
 
-        report_layout = QVBoxLayout()
-        report_layout.addWidget(ReportGroup())
-        self.report_tab.setLayout(report_layout)
+        # report_layout = QVBoxLayout()
+        # report_layout.addWidget(ReportGroup())
+        # self.report_tab.setLayout(report_layout)
 
     def user_changed_slot(self, username):
         self.user_group.user_change_slot(username)
@@ -164,12 +165,12 @@ class ReportGroup(QWidget):
 
     def hand_layout(self):
         layout = QVBoxLayout()
-        # layout.addWidget(HandReport())
+        layout.addWidget(HandReport())
         return layout
 
     def arm_layout(self):
         layout = QVBoxLayout()
-        # layout.addWidget(ArmReport())
+        layout.addWidget(ArmReport())
         return layout
 
 
