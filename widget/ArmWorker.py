@@ -161,12 +161,12 @@ def convertVeloListToByte(velo_list, forward):
     velo_mat[row - 1] = [0, 0, 0, 0]
     return velo_mat
 
+
 def get_velocity_byte_list(v_list):
     v_byte_list = []
     for v in v_list:
         v_byte_list.append(to_byte(v))
     return v_byte_list
-
 
 
 class ArmHomingThread(QThread):
@@ -196,8 +196,12 @@ class ArmStopThread(QThread):
         self.y_axis = y_axis
 
     def run(self):
-        self.x_axis.stop()
-        self.y_axis.stop()
+        # stop the current movement
+        # self.x_axis.stop()
+        # self.y_axis.stop()
+
+        self.x_axis.shut_down()
+        self.y_axis.shut_down()
 
 
 class ArmInfoThread(QThread):
@@ -247,9 +251,6 @@ if __name__ == '__main__':
 
     forward_x = checkDirection(start_x, target_x)
     forward_y = checkDirection(start_y, target_y)
-
-    print(forward_x)  # ???
-    print(forward_y)  # ???
 
     y = get_velocity_list(10)
 

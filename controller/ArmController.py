@@ -51,6 +51,10 @@ class D1:
         self.command(self.switchOn_array)
         self.command(self.enableOperation_array)
 
+    def shut_down(self):
+        self.command(self.resetError_array)
+        self.command(self.shutdown_array)
+
     def command(self, data):
         self.s.send(data)
         return list(self.s.recv(24))
