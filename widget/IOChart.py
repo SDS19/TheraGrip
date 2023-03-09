@@ -169,6 +169,7 @@ def load_chart(file_path):
     y2 = []
 
     file = open(file_path, "r")
+    print(file_path)
     str_lines = file.readlines()
 
     str_line_1 = str_lines[0].replace('[', '').replace(']', '').replace(' ', '').replace('\'', '').split(',')
@@ -180,24 +181,33 @@ def load_chart(file_path):
 
     file.close()
 
-    if not str(file_path).find('position') == -1:
-        dual_plot(file_path, clean_position_list(y1), clean_position_list(y2), 'X Axis: Range', 'Y Axis: Range', 'position (mm)')
-    elif not str(file_path).find('velocity') == -1:
-        dual_plot(file_path, to_clean_list(y1), to_clean_list(y2), 'X Axis: Velocity', 'Y Axis: Velocity', 'velocity (mm/s)')
-    elif not str(file_path).find('force') == -1:
-        triple_plot(file_path, to_clean_list(y1), to_clean_list(y2), 'X Axis: component force', 'Y Axis: component force', 'resultant force', 'force (N)')
+    if not str(file_path).find('hand') == -1:
+        if not str(file_path).find('position') == -1:
+            dual_plot(file_path, clean_position_list(y1), clean_position_list(y2), 'Motor 1: Range', 'Motor 2: Range', 'position (mm)')
+        elif not str(file_path).find('velocity') == -1:
+            dual_plot(file_path, to_clean_list(y1), to_clean_list(y2), 'Motor 1: Velocity', 'Motor 2: Velocity', 'velocity (mm/s)')
+    elif not str(file_path).find('arm') == -1:
+        if not str(file_path).find('position') == -1:
+            dual_plot(file_path, clean_position_list(y1), clean_position_list(y2), 'X Axis: Position', 'Y Axis: Position', 'position (mm)')
+        elif not str(file_path).find('velocity') == -1:
+            dual_plot(file_path, to_clean_list(y1), to_clean_list(y2), 'X Axis: Velocity', 'Y Axis: Velocity', 'velocity (mm/s)')
+        elif not str(file_path).find('force') == -1:
+            triple_plot(file_path, to_clean_list(y1), to_clean_list(y2), 'X Axis: component force', 'Y Axis: component force', 'resultant force', 'force (N)')
 
 
 """ ******************** config I/O ******************** """
+
 
 def read_user_config(task, username):
     file = open(os.path.join(os.path.dirname(__file__), 'user', username, 'config', task + '.txt'), "r")
     return file.read().replace('[', '').replace(']', '').replace(' ', '').replace('\'', '').split(',')
 
+
 def write_user_config(task, data, username):
     file = open(os.path.join(os.path.dirname(__file__), 'user', username, 'config', task + '.txt'), "w")
     file.write(str(data))
     file.close()
+
 
 """ ******************** data processing ******************** """
 
