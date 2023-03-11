@@ -30,9 +30,10 @@ class ArmUser(QWidget):
     def user_changed_slot(self, username):
         self.username = username
         self.user_history_widget.username = username
+        self.layout.addLayout(self.load_task_layout(), 0, 0)
         print("arm user: " + username)
 
-    def list(self):  # temporarily save data to memory
+    def list(self):  # finish
         self.force_x = []
         self.force_y = []
 
@@ -46,56 +47,68 @@ class ArmUser(QWidget):
         self.setWindowIcon(QIcon('icon/arm.PNG'))
         self.setWindowTitle('Arm User')
 
-        layout = QVBoxLayout()
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
 
-        task_group = QGroupBox('Task')
+        self.task_layout = QGridLayout()
+
         info_group = QGroupBox('Info')
         train_group = QGroupBox('Setting')
 
-        layout.addWidget(task_group)
-        layout.addWidget(info_group)
-        layout.addWidget(train_group)
-
-        task_group.setLayout(self.task_layout())
         info_group.setLayout(self.info_layout())
         train_group.setLayout(self.setting_layout())
 
+        self.layout.addLayout(self.load_task_layout(), 0, 0)
+        self.layout.addWidget(info_group)
+        self.layout.addWidget(train_group)
+
     """ ******************** task widget ******************** """
 
-    def task_layout(self):
-        layout = QGridLayout()
-        layout.addWidget(self.task_button('Task 1'), 0, 0)
-        layout.addWidget(self.task_button('Task 2'), 0, 1)
-        layout.addWidget(self.task_button('Task 3'), 0, 2)
-        layout.addWidget(self.task_button('Task 4'), 1, 0)
-        layout.addWidget(self.task_button('Task 5'), 1, 1)
-        layout.addWidget(self.task_button('Task 6'), 1, 2)
-        return layout
+    def load_task_layout(self):  # finish
+        self.btn_1 = self.load_task_config(1)
+        self.btn_2 = self.load_task_config(2)
+        self.btn_3 = self.load_task_config(3)
+        self.btn_4 = self.load_task_config(4)
+        self.btn_5 = self.load_task_config(5)
+        self.btn_6 = self.load_task_config(6)
 
-    def task_button(self, task):
-        config = read_user_config(task, self.username)
-        btn = QPushButton(task)
-        btn.clicked.connect(lambda: self.start(config[0]+', '+config[1], config[2]+', '+config[3], config[4], config[5]))
+        self.task_layout.addWidget(self.btn_1, 0, 0)
+        self.task_layout.addWidget(self.btn_2, 0, 1)
+        self.task_layout.addWidget(self.btn_3, 0, 2)
+        self.task_layout.addWidget(self.btn_4, 1, 0)
+        self.task_layout.addWidget(self.btn_5, 1, 1)
+        self.task_layout.addWidget(self.btn_6, 1, 2)
+
+        return self.task_layout
+
+    def load_task_config(self, num):  # finish
+        config = read_user_config('Task ' + str(num), self.username)
+
+        point_1 = config[0] + ', ' + config[1]
+        point_2 = config[2] + ', ' + config[3]
+        velocity = config[4]
+        times = config[5]
+
+        return self.task_button('Task ' + str(num), point_1, point_2, velocity, times)
+
+    def task_button(self, name, point_1, point_2, velocity, times):  # finish
+        btn = QPushButton(name)
+        btn.clicked.connect(lambda: self.start(point_1, point_2, velocity, times))
         return btn
 
-    def start(self, point_1, point_2, velocity, times):
-        print(point_1)
-        print(point_2)
-        print(velocity)
-        print(times)
-        
-        self.real_time_slot()
+    def start(self, point_1, point_2, velocity, times):  # finish
+        print(point_1, point_2, velocity, times)
 
         p1 = parse_to_list(point_1)
         p2 = parse_to_list(point_2)
         
         self.list()
+        self.real_time_slot()
         self.move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
         self.move_worker.finish.connect(self.save_record_index)
         self.move_worker.start()
             
-    def save_record_index(self):  # finish
+    def save_record_index(self):
         self.index = len(self.force_x)
 
     def real_time_slot(self):
@@ -107,7 +120,7 @@ class ArmUser(QWidget):
         self.info_worker.update.connect(self.info_update_event)
         self.info_worker.start()
 
-    def info_update_event(self, data):  # finish
+    def info_update_event(self, data):
         self.force_x.append(data[0][0])
         self.position_x.append(data[0][1])
         self.velocity_x.append(data[0][2])
@@ -142,7 +155,7 @@ class ArmUser(QWidget):
         layout.addWidget(x_lab, 0, 1)
         layout.addWidget(y_lab, 0, 2)
 
-    ''' finish ********** velocity info ********** '''
+    ''' ********** velocity info ********** '''
 
     def velocity_info(self, layout):
         v_lab = QLabel('real-time velocity (mm/s): ', self)
@@ -163,7 +176,7 @@ class ArmUser(QWidget):
         layout.addWidget(self.v_y, 1, 2)
         layout.addWidget(self.v_btn, 1, 3)
 
-    ''' finish ********** position info ********** '''
+    ''' ********** position info ********** '''
 
     def position_info(self, layout):
         p_lab = QLabel('real-time position (mm): ', self)
@@ -236,17 +249,17 @@ class ArmUser(QWidget):
 
         return layout
 
-    def homing(self):  # finish
+    def homing(self):
         self.homing_worker = ArmHomingThread(self.x_axis, self.y_axis)
         self.homing_worker.start()
 
-    def reset(self):  # finish
+    def reset(self):
         self.list()
         self.x_axis.reset_error()
         self.y_axis.reset_error()
         QMessageBox.information(self, "Done!", "Reset error success!")
 
-    def stop(self):  # finish
+    def stop(self):
         self.stop_worker = ArmStopThread(self.x_axis, self.y_axis)
         self.stop_worker.start()
 
@@ -266,6 +279,8 @@ class ArmUser(QWidget):
 
 
 class ArmDev(QWidget):
+    configChanged = pyqtSignal()
+
     if test:
         def __init__(self):
             super().__init__()
@@ -288,6 +303,7 @@ class ArmDev(QWidget):
 
     def user_changed_slot(self, username):
         self.username = username
+        self.update_task_layout()
         print("arm dev: " + self.username)
 
     def list(self):
@@ -304,19 +320,43 @@ class ArmDev(QWidget):
         self.setWindowIcon(QIcon('icon/arm.PNG'))
         self.setWindowTitle('Arm Dev')
 
-        layout = QGridLayout()
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
 
-        layout.addLayout(self.column_layout(), 0, 0)
+        self.layout.addLayout(self.column_layout(), 0, 0)
 
-        for i in range(6):
-            config = read_user_config('Task ' + str(i + 1), self.username)
-            layout.addLayout(self.task_layout('Task ' + str(i + 1), config[0] + ', ' + config[1], config[2] + ', ' + config[3], config[4], config[5]), i + 1, 0)
+        self.update_task_layout()
 
-        layout.addLayout(self.info(), 8, 0)
-        layout.addLayout(self.button_bar(), 9, 0)
+        self.layout.addLayout(self.info(), 7, 0)
+        self.layout.addLayout(self.button_bar(), 8, 0)
 
-    """ finish ******************** column widget ******************** """
+    def load_task_config(self, num):
+        config = read_user_config('Task ' + str(num), self.username)
+
+        name = 'Task ' + str(num)
+        start = config[0] + ', ' + config[1]
+        end = config[2] + ', ' + config[3]
+        velocity = config[4]
+        times = config[5]
+
+        return self.task_layout(name, start, end, velocity, times)
+
+    def update_task_layout(self):
+        self.task_1 = self.load_task_config(1)
+        self.task_2 = self.load_task_config(2)
+        self.task_3 = self.load_task_config(3)
+        self.task_4 = self.load_task_config(4)
+        self.task_5 = self.load_task_config(5)
+        self.task_6 = self.load_task_config(6)
+
+        self.layout.addLayout(self.task_1, 1, 0)
+        self.layout.addLayout(self.task_2, 2, 0)
+        self.layout.addLayout(self.task_3, 3, 0)
+        self.layout.addLayout(self.task_4, 4, 0)
+        self.layout.addLayout(self.task_5, 5, 0)
+        self.layout.addLayout(self.task_6, 6, 0)
+
+    """ ******************** column widget ******************** """
 
     def column_layout(self):
         layout = QGridLayout()
@@ -357,7 +397,7 @@ class ArmDev(QWidget):
         self.worker = ArmStopThread(self.x_axis, self.y_axis)
         self.worker.start()
 
-    """ finish ******************** task ******************** """
+    """ ******************** task ******************** """
 
     def task_layout(self, name, start, end, velocity, times):
         layout = QGridLayout()
@@ -395,22 +435,50 @@ class ArmDev(QWidget):
 
     def start(self, name, point_1, point_2, velocity, times):
         self.stop_btn.setEnabled(True)
-        
-        self.real_time_slot()
 
         p1 = parse_to_list(point_1)
         p2 = parse_to_list(point_2)
 
         if len(p1) == 2 and len(p2) == 2:
             write_user_config(name, [p1, p2, velocity, times], self.username)
+            self.configChanged.emit()
+
             self.list()  # clear old record
-            self.worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
-            self.worker.finish.connect(self.save_record_index)
-            self.worker.start()
+
+            self.real_time_slot()
+            self.move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
+            self.move_worker.finish.connect(self.save_record_index)
+            self.move_worker.start()
         else:
             QMessageBox.information(self, "Error!", "Please enter correct range value: (0~350), (0~250)")
+            
+    def real_time_slot(self):
+        self.v_btn.setEnabled(True)
+        self.p_btn.setEnabled(True)
+        self.f_btn.setEnabled(True)
 
-    def save_record_index(self):  # finish
+        self.worker = ArmInfoThread(self.x_axis, self.y_axis)
+        self.worker.update.connect(self.info_update_event)
+        self.worker.start()
+        
+    def info_update_event(self, data):  # test
+        self.force_x.append(data[0][0])
+        self.position_x.append(data[0][1])
+        self.velocity_x.append(data[0][2])
+
+        self.force_y.append(data[1][0])
+        self.position_y.append(data[1][1])
+        self.velocity_y.append(data[1][2])
+
+        self.f_x.setText(str(data[0][0]))
+        self.p_x.setText(str(data[0][1]))
+        self.v_x.setText(str(data[0][2]))
+
+        self.f_y.setText(str(data[1][0]))
+        self.p_y.setText(str(data[1][1]))
+        self.v_y.setText(str(data[1][2]))
+
+    def save_record_index(self):
         self.index = len(self.force_x)
 
     """ finish ****************************** info widget ****************************** """
@@ -505,9 +573,9 @@ class ArmDev(QWidget):
         reset_btn.setToolTip('Reset motor error and data record!')
         reset_btn.pressed.connect(self.reset)
 
-        update_btn = QPushButton('Real-Time(omit)', self)
+        update_btn = QPushButton('Shut down', self)
         update_btn.setToolTip('Display real-time data!')
-        update_btn.pressed.connect(self.real_time_slot)
+        update_btn.pressed.connect(self.shut_down_slot)
 
         save_btn = QPushButton('Save', self)
         save_btn.setToolTip('Save real-time data record!')
@@ -520,11 +588,11 @@ class ArmDev(QWidget):
 
         return layout
 
-    def homing(self):
+    def homing(self):  # finish
         self.worker = ArmHomingThread(self.x_axis, self.y_axis)
         self.worker.start()
 
-    def reset(self):
+    def reset(self):  # finish
         self.list()
         
         self.x_axis.reset_error()
@@ -532,31 +600,9 @@ class ArmDev(QWidget):
         
         QMessageBox.information(self, "Done!", "Record reset success!")
 
-    def real_time_slot(self):
-        self.v_btn.setEnabled(True)
-        self.p_btn.setEnabled(True)
-        self.f_btn.setEnabled(True)
-
-        self.worker = ArmInfoThread(self.x_axis, self.y_axis)
-        self.worker.update.connect(self.info_update_event)
-        self.worker.start()
-
-    def info_update_event(self, data):  # test
-        self.force_x.append(data[0][0])
-        self.position_x.append(data[0][1])
-        self.velocity_x.append(data[0][2])
-
-        self.force_y.append(data[1][0])
-        self.position_y.append(data[1][1])
-        self.velocity_y.append(data[1][2])
-
-        self.f_x.setText(str(data[0][0]))
-        self.p_x.setText(str(data[0][1]))
-        self.v_x.setText(str(data[0][2]))
-
-        self.f_y.setText(str(data[1][0]))
-        self.p_y.setText(str(data[1][1]))
-        self.v_y.setText(str(data[1][2]))
+    def shut_down_slot(self):  # finish
+        self.x_axis.shut_down()
+        self.y_axis.shut_down()
 
     def save(self):
         write_user_log(self.username, 'arm', 'position', self.position_x[0:self.index])
