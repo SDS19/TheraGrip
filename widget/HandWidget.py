@@ -61,12 +61,9 @@ class HandUser(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.record)
 
-    """ finish ******************** Timer ******************** """
+    """ ******************** Timer ******************** """
 
-    def record(self):
-        # if len(self.position_1) < 100:
-        #     self.prg.setValue(len(self.position_1) + 1)
-        #     self.position_1.append(1)
+    def record(self):  # finish
         self.position_record()
         self.velocity_record()
 
@@ -75,13 +72,13 @@ class HandUser(QWidget):
             self.prg.setValue(len(self.position_1) + 1)  # update progress bar
 
             p_1 = round(self.node_1.get_actual_position() * self.node_1.position_factor, 2)
-            p_2 = round(self.node_2.get_actual_position() * self.node_2.position_factor, 2)
+            p_2 = -1 * round(self.node_2.get_actual_position() * self.node_2.position_factor, 2)
 
             self.position_1.append(p_1)
             self.position_2.append(p_2)
 
             self.range_val_1.setText(str(p_1))
-            self.range_val_2.setText(str(-1 * p_2))
+            self.range_val_2.setText(str(p_2))
         else:
             self.timer.stop()
             print("QTimer stopped!")
@@ -91,7 +88,7 @@ class HandUser(QWidget):
             self.range_val_1.setText(str(abs(round(max(self.position_1) - min(self.position_1), 2))))
             self.range_val_2.setText(str(abs(round(max(self.position_2) - min(self.position_2), 2))))
 
-    def velocity_record(self):
+    def velocity_record(self):  # finish
         if len(self.velocity_1) < 100:
             v_1 = round(self.node_1.get_actual_velocity(), 2)
             v_2 = round(self.node_2.get_actual_velocity(), 2)
@@ -109,7 +106,7 @@ class HandUser(QWidget):
 
     """ finish ******************** Grip Test ******************** """
 
-    def grip_test_layout(self):
+    def grip_test_layout(self):  # finish
         layout = QGridLayout()
 
         label = QLabel('Grip Test: ', self)
@@ -140,26 +137,24 @@ class HandUser(QWidget):
 
         return layout
 
-    def start_slot(self):
+    def start_slot(self):  # finish
         self.list()
-            
+
         self.node_1.homing_to_actual_position()
         self.node_2.homing_to_actual_position()
+
         self.node_1.shut_down()
         self.node_2.shut_down()
 
         self.timer.start(100)  # 10 ms
         self.stop_btn.setEnabled(True)
 
-    def stop_slot(self):
+    def stop_slot(self):  # finish
         self.timer.stop()
         self.stop_btn.setEnabled(False)
 
-    def save_slot(self):
+    def save_slot(self):  # finish
         self.save_btn.setEnabled(False)
-        # write_config('hand', [min(self.position_1), max(self.position_1),
-        #                       min(self.position_2), max(self.position_2),
-        #                       max(self.velocity_1), max(self.velocity_2)])
 
         write_user_log(self.username, 'hand', 'position', self.position_1)
         write_user_log(self.username, 'hand', 'position', '\n' + str(self.position_2))
@@ -224,14 +219,14 @@ class HandUser(QWidget):
 
     """ ******************** Setting Widget ******************** """
 
-    def setting_layout(self):
+    def setting_layout(self):  # finish
         layout = QVBoxLayout()
         layout.addLayout(self.training_layout())
         self.user_history_widget = UserHistory(self.username, 'hand')
         layout.addWidget(self.user_history_widget)
         return layout
 
-    def training_layout(self):
+    def training_layout(self):  # finish
         layout = QGridLayout()
 
         loop_lab = QLabel('loop times: ', self)
@@ -255,36 +250,39 @@ class HandUser(QWidget):
 
         return layout
 
-    def config(self):        
-       if not test:        
-           self.node_1.start_position = min(self.position_1) / self.node_1.position_factor
-           self.node_1.end_position = max(self.position_1) / self.node_1.position_factor
+    def config(self): # finish
+        self.node_1.start_position = min(self.position_1) / self.node_1.position_factor
+        self.node_1.end_position = max(self.position_1) / self.node_1.position_factor
+            
+        original_position_2 = [i * -1 for i in self.position_2]
 
-           self.node_2.start_position = min(self.position_2) / self.node_2.position_factor
-           self.node_2.end_position = max(self.position_2) / self.node_2.position_factor
+        self.node_2.start_position = max(original_position_2) / self.node_2.position_factor
+        self.node_2.end_position = min(original_position_2) / self.node_2.position_factor
 
-           self.node_1.set_target_velocity(max(self.velocity_1))
-           self.node_2.set_target_velocity(max(self.velocity_2))
+        self.node_1.set_target_velocity(max(self.velocity_1))
+        self.node_2.set_target_velocity(max(self.velocity_2))
            
-           self.node_1.cycle = int(self.loop_val.text())
+        self.node_1.cycle = int(self.loop_val.text())
+        
+    def btn_enable(self, flag):  # finish
+        self.start.setEnabled(flag)
+        self.stop.setEnabled(not flag)
 
-    def start_training_slot(self):
+    def start_training_slot(self):  # finish
         self.btn_enable(False)
         self.config()
+        
         self.worker = HandMoveThread(self.node_1, self.node_2)
         self.worker.finished.connect(lambda: self.btn_enable(True))
         self.worker.start()      
 
-    def stop_training_slot(self):
+    def stop_training_slot(self):  # finish
         self.btn_enable(True)
+        
         self.worker = HandStopThread(self.node_1, self.node_2)
         self.worker.finished.connect(lambda: self.btn_enable(False))
         self.worker.start()
-       
-    def btn_enable(self, flag):
-        self.start.setEnabled(flag)
-        self.stop.setEnabled(not flag)
-
+    
 
 class HandDev(QWidget):
     if test:
@@ -311,7 +309,7 @@ class HandDev(QWidget):
         self.username = username
         print("hand dev: " + username)
 
-    def list(self):
+    def list(self):  # finish
         self.current_1 = []
         self.current_2 = []
 
@@ -321,7 +319,7 @@ class HandDev(QWidget):
         self.velocity_1 = []
         self.velocity_2 = []
 
-    def init(self):
+    def init(self):  # finish
         self.setWindowIcon(QIcon('icon/open hand.PNG'))
         self.setWindowTitle('Hand Dev')
 
@@ -346,7 +344,7 @@ class HandDev(QWidget):
 
     """ ******************** Timer ******************** """
 
-    def record(self):
+    def record(self):  # finish
         self.position_record()
         self.velocity_record()
         self.current_record()
@@ -361,7 +359,7 @@ class HandDev(QWidget):
         self.p_val_1.setText(str(p_1))
         self.p_val_2.setText(str(p_2))
 
-    def velocity_record(self):
+    def velocity_record(self):  # finish
         v_1 = round(self.node_1.get_actual_velocity(), 2)
         v_2 = round(self.node_2.get_actual_velocity(), 2)
 
@@ -371,7 +369,7 @@ class HandDev(QWidget):
         self.v_val_1.setText(str(v_1))
         self.v_val_2.setText(str(v_2))
         
-    def current_record(self):
+    def current_record(self):  # finish
         f_1 = round(self.node_1.get_actual_current(), 2)
         f_2 = round(self.node_2.get_actual_current(), 2)
 
@@ -381,9 +379,9 @@ class HandDev(QWidget):
         self.f_val_1.setText(str(f_1))
         self.f_val_2.setText(str(f_2))
 
-    """ finish ******************** homing widget ******************** """
+    """ ******************** homing widget ******************** """
 
-    def homing_widget(self, layout):
+    def homing_widget(self, layout):  # finish
         homing_lab = QLabel("Homing: ", self)
 
         homing_1 = QPushButton("Motor 1", self)
@@ -398,17 +396,17 @@ class HandDev(QWidget):
         layout.addWidget(homing_1, 0, 1)
         layout.addWidget(homing_2, 0, 2)
 
-    def homing_slot_1(self):
+    def homing_slot_1(self):  # finish
         self.node_1.homing_to_actual_position()
         self.node_1.shut_down()
 
-    def homing_slot_2(self):
+    def homing_slot_2(self):  # finish
         self.node_2.homing_to_actual_position()
         self.node_2.shut_down()
 
-    """ finish ********** start position widget ********** """
+    """ ********** start position widget ********** """
 
-    def start_position_widget(self, layout):
+    def start_position_widget(self, layout):  # finish
         start_label = QLabel('start position (mm): ', self)
 
         self.start_val_1 = QLineEdit(self)
@@ -427,7 +425,7 @@ class HandDev(QWidget):
         layout.addWidget(self.start_val_2, 1, 2)
         layout.addWidget(start_btn, 1, 3)
 
-    def start_btn_slot(self):
+    def start_btn_slot(self):  # finish
         self.node_1.start_position = self.node_1.get_actual_position()
         self.node_2.start_position = self.node_2.get_actual_position()
 
@@ -437,9 +435,9 @@ class HandDev(QWidget):
         print("node 1 start position: " + str(self.node_1.start_position))
         print("node 2 start position: " + str(self.node_2.start_position))
 
-    """ finish ********** end position widget ********** """
+    """ ********** end position widget ********** """
 
-    def end_position_widget(self, layout):
+    def end_position_widget(self, layout):  # finish
         end_label = QLabel('end position  (mm): ', self)
 
         self.end_val_1 = QLineEdit(self)
