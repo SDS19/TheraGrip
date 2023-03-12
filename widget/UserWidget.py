@@ -54,7 +54,9 @@ class UserBar(QWidget):
         layout.addWidget(add_btn, 0, 4)
 
     def user_changed_slot(self):
-        self.username = self.user_box.currentText()
+        currentUser = self.user_box.currentText()
+        if not len(currentUser) == 0:
+            self.username = currentUser
         self.userChanged.emit(self.username)
 
     """ ******************** create new user ******************** """
@@ -62,16 +64,16 @@ class UserBar(QWidget):
     def create_user_slot(self):
         username = self.new_user.text()
         if not len(username) == 0:
+            self.username = username
             self.mkdir_user(username)
             self.user_box.clear()
             self.user_box.addItems(get_user_list())  # reload
         else:
             QMessageBox.information(self, "Error!", "User cannot be null!")
 
-    def mkdir_user(self, username):
+    def mkdir_user(self, username):  # finish
         user_path = os.path.join(os.path.dirname(__file__), 'user', username)  # user dir
         if not os.path.exists(user_path):
-
             os.mkdir(user_path)  # make user dir
             os.mkdir(os.path.join(user_path, 'log'))  # make log dir
             os.mkdir(os.path.join(user_path, 'log', 'hand'))
@@ -84,10 +86,10 @@ class UserBar(QWidget):
             QMessageBox.information(self, "Done!", "New user added success under: \n" + user_path)
         else:
             QMessageBox.information(self, "Error!", "This user exists already!")
-            print(user_path)
+        print(user_path)
 
 
-class UserHistory(QWidget):
+class UserHistory(QWidget):  # finish
     def __init__(self, username, obj):
         super().__init__()
         self.username = username
@@ -119,5 +121,5 @@ class UserHistory(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = UserBar()
+    window = UserHistory('demo', 'hand')
     sys.exit(app.exec_())
