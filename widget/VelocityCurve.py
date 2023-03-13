@@ -1,7 +1,9 @@
 import math
+import struct
+
 import numpy as np
 from matplotlib import pyplot as plt
-import similaritymeasures as similaritymeasures
+# import similaritymeasures
 
 
 """ Function: human mode
@@ -117,6 +119,19 @@ def get_xy_velocity_list(n, start_point, end_point):
     return [x_list, y_list, v_list]
 
 
+def to_byte(x):  # factor
+    return list(int(x).to_bytes(4, byteorder='little', signed=True))
+
+
+def negNumToFourByte(num):  # check negative num 23.02
+    # byte_list = [255, 255, 255, 255]
+    num = abs(num)
+    byte_list = to_byte(num)
+    for i in range(0, 4):
+        byte_list[i] = 255 - byte_list[i]
+    return byte_list
+
+
 """ ******************** time (s) ******************** """
 
 
@@ -149,7 +164,7 @@ def get_time_list(v_list, start_point, end_point):
 
 # acceleration = abs(velocity) / time
 def get_acceleration_list(v_list, t_list):
-    a_list = []
+    a_list = [0]
     for i in range(1, len(v_list)):
         dv = abs(v_list[i] - v_list[i - 1])
         dt = t_list[i - 1]
@@ -192,42 +207,42 @@ def velocity_plot(v_x, v_y):
     plt.show()
 
 
-def get_diff(v_x, v_y):
-    n = len(v_x) - 1
-    d = int(100 / n)
-    y1 = get_velocity_list(100)  # len: 101
-
-    y2 = get_v_list(v_x, v_y)
-    print('y2: ', len(y2), y2)
-
-    # area = 0
-    # abs_area = 0
-    # for i in range(n):
-    #     a = d * i
-    #     b = d * (i + 1)
-    #     diff = np.trapz(y1[a:b], dx=1) - np.trapz(y2[i:i + 2], dx=d)
-    #     area = area + diff
-    #     abs_area += abs(diff)
-    #
-    # print('area: ' + str(area))
-    # print('abs_area: ' + str(abs_area))
-
-    x1 = np.arange(0, 101, 1)  # [0, 1, ..., 100]
-    exp_data = np.zeros((101, 2))  # [[x0, y0], [x1, y1] ...]
-    exp_data[:, 0] = x1
-    exp_data[:, 1] = y1
-
-    x2 = np.arange(0, 101, d)
-    num_data = np.zeros((len(x2), 2))
-    num_data[:, 0] = x2
-    num_data[:, 1] = y2
-    print(num_data)
-
-    diff = similaritymeasures.area_between_two_curves(exp_data, num_data)
-    print('area: ' + str(diff))
-
-    df = similaritymeasures.frechet_dist(exp_data, num_data)
-    print('Discrete Frechet distance: ' + str(df))
+# def get_diff(v_x, v_y):
+#     n = len(v_x) - 1
+#     d = int(100 / n)
+#     y1 = get_velocity_list(100)  # len: 101
+#
+#     y2 = get_v_list(v_x, v_y)
+#     print('y2: ', len(y2), y2)
+#
+#     # area = 0
+#     # abs_area = 0
+#     # for i in range(n):
+#     #     a = d * i
+#     #     b = d * (i + 1)
+#     #     diff = np.trapz(y1[a:b], dx=1) - np.trapz(y2[i:i + 2], dx=d)
+#     #     area = area + diff
+#     #     abs_area += abs(diff)
+#     #
+#     # print('area: ' + str(area))
+#     # print('abs_area: ' + str(abs_area))
+#
+#     x1 = np.arange(0, 101, 1)  # [0, 1, ..., 100]
+#     exp_data = np.zeros((101, 2))  # [[x0, y0], [x1, y1] ...]
+#     exp_data[:, 0] = x1
+#     exp_data[:, 1] = y1
+#
+#     x2 = np.arange(0, 101, d)
+#     num_data = np.zeros((len(x2), 2))
+#     num_data[:, 0] = x2
+#     num_data[:, 1] = y2
+#     print(num_data)
+#
+#     diff = similaritymeasures.area_between_two_curves(exp_data, num_data)
+#     print('area: ' + str(diff))
+#
+#     df = similaritymeasures.frechet_dist(exp_data, num_data)
+#     print('Discrete Frechet distance: ' + str(df))
 
 
 # def diff_5(v_x, v_y):
@@ -330,11 +345,46 @@ def get_diff(v_x, v_y):
 #     print('area: ' + str(area))
 #     print('abs_area: ' + str(abs_area))
 
+def v_to_byte(v_list, forward):
+    row = len(v_list)
+    velo_mat = np.arange(row * 4).reshape(row, 4)
+
+    if forward:
+        for i in range(0, row):
+            velo_mat[i] = negNumToFourByte(v_list[i])
+    else:
+        for i in range(0, row):
+            velo_mat[i] = to_byte(v_list[i])
+
+    velo_mat[0] = [0, 0, 0, 0]
+    velo_mat[row - 1] = [0, 0, 0, 0]
+
+    return velo_mat
+
+
+def a_to_byte(a_list):
+    row = len(a_list)
+    acc_mat = np.arange(row * 4).reshape(row, 4)
+    for i in range(0, row):
+        acc_mat[i] = to_byte(abs(a_list[i]))
+    return acc_mat
+
+
+def get_v_a_matrix(v_byte, a_byte):
+    return np.hstack((v_byte, a_byte))
+
+
+def direction(start, end):
+    return True if start >= end else False
+
 
 if __name__ == '__main__':
     n = 5
     start_point = [0, 0]
     end_point = [350, 250]
+
+    d_x = abs(end_point[0] - start_point[0])
+    d_y = abs(end_point[1] - start_point[1])
 
     p_list = get_position_list(n, start_point, end_point)
     print('p: ' + str(p_list))
@@ -344,14 +394,37 @@ if __name__ == '__main__':
     v_y_list = v_x_y_list[1]
     v_list = v_x_y_list[2]
     print('v: ' + str(v_list))
+    print('vx: ' + str(v_x_list))
+    print('vy: ' + str(v_y_list))
+
+    v_x_byte = v_to_byte(v_x_list, direction(start_point[0], end_point[0]))
+    v_y_byte = v_to_byte(v_y_list, direction(start_point[1], end_point[1]))
+    print(v_x_byte)
+    print(v_y_byte)
 
     t_list = get_time_list(v_list, start_point, end_point)
     print('t: ' + str(t_list))
 
-    a_list = get_acceleration_list(v_list, t_list)
-    print('a: ' + str(a_list))
+    a_x_list = get_acceleration_list(v_x_list, t_list)
+    a_y_list = get_acceleration_list(v_y_list, t_list)
+    print('ax: ' + str(a_x_list))
+    print('ay: ' + str(a_y_list))
 
-    show_interpolation_curve(n, start_point, end_point)
+    a_x_byte = a_to_byte(a_x_list)
+    a_y_byte = a_to_byte(a_y_list)
+    print(a_x_byte)
+    print(a_y_byte)
+
+    x_matrix = get_v_a_matrix(v_x_byte, a_x_byte)
+    print(x_matrix)
+
+
+
+    # show_interpolation_curve(n, start_point, end_point)
+
+    i = -100
+    # print(to_four_byte(i))
+    # print(to_byte1(i))
 
     # v_x = [0, 2.82, 12.27, 18.48, 29.61, 76.07, 106.1, 123.35, 127.13, 136.01, 140.31, 118.87, 93.66, 87.97, 78.82, 16.2, 15.27, 26.84, 43.18, 22.12, 0.91]
     # v_y = [0, 3.8, 7.61, 44.36, 78.46, 108.5, 146.9, 188.49, 195.31, 199.46, 205.58, 168.53, 141.38, 120.49, 96.75, 57.32, 39.92, 32.33, 12.34, 6.89, 0.45]

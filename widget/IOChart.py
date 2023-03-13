@@ -1,9 +1,7 @@
 import os
 import time
 import numpy
-import shutil
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
 
 
 def single_plot(y, ylabel, title):
@@ -17,12 +15,8 @@ def single_plot(y, ylabel, title):
     ax.grid()
     ax.plot(x, y, color='green')
     ax.set(xlabel='time (ms)', ylabel=ylabel, title=title)
-    ax.annotate('max: ' + str(max_y),
-                 xy=(y.index(max_y), max_y),
-                 xytext=(y.index(max_y), max_y))
-    ax.annotate('min: ' + str(min_y),
-                 xy=(y.index(min_y), min_y),
-                 xytext=(y.index(min_y), min_y))
+    ax.annotate('max: ' + str(max_y), xy=(y.index(max_y), max_y), xytext=(y.index(max_y), max_y))
+    ax.annotate('min: ' + str(min_y), xy=(y.index(min_y), min_y), xytext=(y.index(min_y), min_y))
 
     plt.show()
 
@@ -43,12 +37,8 @@ def dual_plot(name, y1, y2, title_1, title_2, y_label):
     plt.ylabel(y_label)
     plt.plot(x, y1, color='red')
     plt.grid()
-    plt.annotate('max: ' + str(max_y1),
-                 xy=(y1.index(max_y1), max_y1),
-                 xytext=(y1.index(max_y1), max_y1))
-    plt.annotate('min: ' + str(min_y1),
-                 xy=(y1.index(min_y1), min_y1),
-                 xytext=(y1.index(min_y1), min_y1))
+    plt.annotate('max: ' + str(max_y1), xy=(y1.index(max_y1), max_y1), xytext=(y1.index(max_y1), max_y1))
+    plt.annotate('min: ' + str(min_y1), xy=(y1.index(min_y1), min_y1), xytext=(y1.index(min_y1), min_y1))
 
     plt.subplot(2, 1, 2)
     plt.title(title_2)
@@ -56,12 +46,8 @@ def dual_plot(name, y1, y2, title_1, title_2, y_label):
     plt.ylabel(y_label)
     plt.plot(x, y2)
     plt.grid()
-    plt.annotate('max: ' + str(max_y2),
-                 xy=(y2.index(max_y2), max_y2),
-                 xytext=(y2.index(max_y2), max_y2))
-    plt.annotate('min: ' + str(min_y2),
-                 xy=(y2.index(min_y2), min_y2),
-                 xytext=(y2.index(min_y2), min_y2))
+    plt.annotate('max: ' + str(max_y2), xy=(y2.index(max_y2), max_y2), xytext=(y2.index(max_y2), max_y2))
+    plt.annotate('min: ' + str(min_y2), xy=(y2.index(min_y2), min_y2), xytext=(y2.index(min_y2), min_y2))
 
     plt.tight_layout()
     plt.show()
@@ -128,7 +114,7 @@ def xy_force_plot(name, y1, y2):
 
 
 def force_plot(name, y1, y2):
-    single_plot(name, to_force_list(Pythagorean_Theorem(y1, y2)), "force (N)", "resultant force")
+    single_plot(to_force_list(Pythagorean_Theorem(y1, y2)), "force (N)", "resultant force")
 
 
 """ ******************** log I/O ******************** """
@@ -285,5 +271,5 @@ def to_force_list(data):
 
 if __name__ == '__main__':
     filename = "22-12-2022_155238_arm_current.txt"
-    arr = read_log('arm', filename)
+    arr = []
     triple_plot(filename, to_force_list(arr[0]), to_force_list(arr[1]), "X component force", "Y component force", "resultant force", "force (N)")

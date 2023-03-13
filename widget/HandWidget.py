@@ -3,7 +3,7 @@ from widget.IOChart import *
 from widget.HandWorker import *
 from widget.UserWidget import UserHistory
 
-test = True
+test = False
 
 
 class HandUser(QWidget):

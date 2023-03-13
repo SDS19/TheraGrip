@@ -3,7 +3,7 @@ from PyQt5.Qt import *
 from widget.ArmWorker import *
 from widget.UserWidget import UserHistory
 
-test = True
+test = False
 
 
 class ArmUser(QWidget):
