@@ -18,6 +18,9 @@ class ArmMoveThread(QThread):
         self.times = times
 
         self.factor = x_axis.SI_unit_factor
+        
+        self.stop = False
+        self.shut_down = False
 
     finish = pyqtSignal()
 
@@ -25,30 +28,48 @@ class ArmMoveThread(QThread):
         v = 80 if len(self.velocity) == 0 else int(self.velocity)
         times = 1 if len(self.times) == 0 else int(self.times)
 
-#         for i in range(int(times)):
-#             self.x_axis.profile_position_mode(v, 80, self.p1[0])
-#             self.y_axis.profile_position_mode(v, 80, self.p1[1])
-#             while self.x_axis.get_actual_velocity() != 0:
-#                 time.sleep(0.1)
-#             while self.y_axis.get_actual_velocity() != 0:
-#                 time.sleep(0.1)
-# 
-#             self.x_axis.profile_position_mode(80, 80, self.p2[0])
-#             self.y_axis.profile_position_mode(80, 80, self.p2[1])
-#             while self.x_axis.get_actual_velocity() != 0:
-#                 time.sleep(0.1)
-#             while self.y_axis.get_actual_velocity() != 0:
-#                 time.sleep(0.1)
-#                 
-#         self.x_axis.profile_position_mode(v, 80, self.p1[0])
-#         self.y_axis.profile_position_mode(v, 80, self.p1[1])
-#         while self.x_axis.get_actual_velocity() != 0:
-#             time.sleep(0.1)
-#         while self.y_axis.get_actual_velocity() != 0:
-#             time.sleep(0.1)
+        for i in range(int(times)):            
+            self.x_axis.profile_position_mode(v, 80, self.p1[0])
+            self.y_axis.profile_position_mode(v, 80, self.p1[1])
+            while self.x_axis.get_actual_velocity() != 0:
+                time.sleep(0.1)
+            while self.y_axis.get_actual_velocity() != 0:
+                time.sleep(0.1)
+                
+            if self.stop or self.shut_down:
+                break
+                
+            # define the waiting time before movement
+#             time.sleep(3)
+#             print("forward wait: 3 s")
 
+            self.x_axis.profile_position_mode(80, 80, self.p2[0])
+            self.y_axis.profile_position_mode(80, 80, self.p2[1])
+            while self.x_axis.get_actual_velocity() != 0:
+                time.sleep(0.1)
+            while self.y_axis.get_actual_velocity() != 0:
+                time.sleep(0.1)
+                
+            if self.stop or self.shut_down:
+                break
+                
+#             time.sleep(3)
+#             print("backward wait: 3 s")
+
+        if self.shut_down:
+            return
+                
+        self.x_axis.profile_position_mode(v, 80, self.p1[0])
+        self.y_axis.profile_position_mode(v, 80, self.p1[1])
+        while self.x_axis.get_actual_velocity() != 0:
+            time.sleep(0.1)
+        while self.y_axis.get_actual_velocity() != 0:
+            time.sleep(0.1)
+            
+        
         # self.move_1()
-
+#         self.x_axis.profile_velocity_mode(100, 100)
+        
 #         velo_x_mat = convertVeloListToByte(velo_x_list, forward_x)
 #         velo_y_mat = convertVeloListToByte(velo_y_list, forward_y)
 #         
@@ -217,6 +238,7 @@ class ArmStopThread(QThread):  # finish
         self.y_axis = y_axis
 
     def run(self):  # stop the current movement
+        stop = True
         self.x_axis.stop()
         self.y_axis.stop()
 

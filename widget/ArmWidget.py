@@ -104,9 +104,10 @@ class ArmUser(QWidget):
         
         self.list()
         self.real_time_slot()
-        self.move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
-        self.move_worker.finish.connect(self.save_record_index)
-        self.move_worker.start()
+
+        self.arm_move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
+        self.arm_move_worker.finish.connect(self.save_record_index)
+        self.arm_move_worker.start()
             
     def save_record_index(self):
         self.index = len(self.force_x)
@@ -261,6 +262,7 @@ class ArmUser(QWidget):
 
     def stop(self):
         self.stop_worker = ArmStopThread(self.x_axis, self.y_axis)
+        self.arm_move_worker.stop = True
         self.stop_worker.start()
 
     def save(self, flag):
@@ -395,6 +397,7 @@ class ArmDev(QWidget):
 
     def stop(self):
         self.worker = ArmStopThread(self.x_axis, self.y_axis)
+        self.arm_move_worker.stop = True
         self.worker.start()
 
     """ ******************** task ******************** """
@@ -444,11 +447,11 @@ class ArmDev(QWidget):
             self.configChanged.emit()
 
             self.list()  # clear old record
-
             self.real_time_slot()
-            self.move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
-            self.move_worker.finish.connect(self.save_record_index)
-            self.move_worker.start()
+            
+            self.arm_move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
+            self.arm_move_worker.finish.connect(self.save_record_index)
+            self.arm_move_worker.start()
         else:
             QMessageBox.information(self, "Error!", "Please enter correct range value: (0~350), (0~250)")
             
@@ -601,6 +604,7 @@ class ArmDev(QWidget):
         QMessageBox.information(self, "Done!", "Record reset success!")
 
     def shut_down_slot(self):  # finish
+        self.arm_move_worker.shut_down = True
         self.x_axis.shut_down()
         self.y_axis.shut_down()
 
