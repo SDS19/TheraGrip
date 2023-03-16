@@ -30,26 +30,6 @@ def show_mod_velocity_curve(n):
     plt.show()
 
 
-def interpolation_plot(y_p, y_v, y_a, y_t, ylabel, title):  # finish
-    x = list(range(len(y_v)))
-
-    fig, ax = plt.subplots()
-    ax.grid()
-    ax.plot(x, y_v, color='red')
-    ax.set(xlabel='Movement Progress (%)', ylabel=ylabel, title=title + '  ' + str(y_p[0]) + ' -> ' + str(y_p[-1]))
-
-    for i, j, k, t in zip(y_p, y_v, y_a, y_t):
-        if i != 0:
-            ax.annotate('p = ' + str(i[0]) + ' mm, ' + str(i[1]) + ' mm\n' +
-                        'v = ' + str(round(j, 2)) + ' mm/s\n' +
-                        'a = ' + str(round(k, 2)) + ' mm^2/s\n' +
-                        't = ' + str(t) + ' s',
-                        xy=(y_v.index(j), j),
-                        xytext=(y_v.index(j), j - 20))
-
-    plt.show()
-
-
 # display the interpolation curve and parameter of each interpolation point
 def show_interpolation_curve(n, start_point, end_point):
     p_list = get_position_list(n, start_point, end_point)
@@ -57,7 +37,23 @@ def show_interpolation_curve(n, start_point, end_point):
     t_list = get_time_list(v_list, start_point, end_point)
     a_list = get_acceleration_list(v_list, t_list)
 
-    interpolation_plot(p_list, v_list, a_list, t_list, "Velocity (mm/s)", "Velocity Curve with " + str(n) + " interpolation-points")
+    x = list(range(len(v_list)))
+
+    fig, ax = plt.subplots()
+    ax.grid()
+    ax.plot(x, v_list, color='red')
+    ax.set(xlabel='Movement Progress (%)', ylabel='Velocity (mm/s)', title='Velocity Curve with ' + str(n) + ' interpolation-points' + '  ' + str(p_list[0]) + ' -> ' + str(p_list[-1]))
+
+    for i, j, k, t in zip(p_list, v_list, a_list, t_list):
+        if i != 0:
+            ax.annotate('p = ' + str(i[0]) + ' mm, ' + str(i[1]) + ' mm\n' +
+                        'v = ' + str(round(j, 2)) + ' mm/s\n' +
+                        'a = ' + str(round(k, 2)) + ' mm^2/s\n' +
+                        't = ' + str(t) + ' s',
+                        xy=(v_list.index(j), j),
+                        xytext=(v_list.index(j), j - 20))
+
+    plt.show()
 
 
 """ ******************** position (mm) ******************** """
