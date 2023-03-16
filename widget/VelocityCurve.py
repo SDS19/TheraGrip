@@ -18,13 +18,25 @@ def mod_velocity_curve(x):
     return y / 2
 
 
+def show_mod_velocity_curve(n):
+    x = list(range(n + 1))
+    y = get_velocity_list(n)
+
+    fig, ax = plt.subplots()
+    ax.grid()
+    ax.plot(x, y, color='red')
+    ax.set(xlabel='Movement Progress (%)', ylabel='Velocity (mm/s)', title='Modified Velocity Curve')
+
+    plt.show()
+
+
 def interpolation_plot(y_p, y_v, y_a, y_t, ylabel, title):  # finish
     x = list(range(len(y_v)))
 
     fig, ax = plt.subplots()
     ax.grid()
     ax.plot(x, y_v, color='red')
-    ax.set(xlabel='interpolation point (n)', ylabel=ylabel, title=title + '  ' + str(y_p[0]) + ' -> ' + str(y_p[-1]))
+    ax.set(xlabel='Movement Progress (%)', ylabel=ylabel, title=title + '  ' + str(y_p[0]) + ' -> ' + str(y_p[-1]))
 
     for i, j, k, t in zip(y_p, y_v, y_a, y_t):
         if i != 0:
@@ -369,6 +381,8 @@ if __name__ == '__main__':
     n = 5
     start_point = [0, 0]
     end_point = [350, 250]
+
+    show_mod_velocity_curve(100)
 
     show_interpolation_curve(n, start_point, end_point)
 
