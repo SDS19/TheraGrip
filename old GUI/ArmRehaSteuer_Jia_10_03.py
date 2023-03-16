@@ -318,7 +318,8 @@ Y_Motor.homing(60,300)
 
 """ ******************** velocity curve ******************** """
 
-def mod_velocity_curve(x):
+
+def mod_velocity_curve(x):  # finish
     y = -5.83397691012945e-14 * pow(x, 9) + 4.01458396693356e-11 * pow(x, 8) - 9.62482037096911e-9 * pow(x, 7) + \
            1.06977262917339e-6 * pow(x, 6) - 5.68239363212274e-5 * pow(x, 5) + 0.00125022968775769 * pow(x, 4) - \
            0.0124822800434351 * pow(x, 3) + 0.531322885004075 * pow(x, 2) - 0.240497493514033 * x + 0.234808880863676
@@ -327,8 +328,9 @@ def mod_velocity_curve(x):
 
 """ ******************** position (mm) ******************** """
 
+
 # get position of each interpolation point
-def get_position_list(n, start_point, end_point):
+def get_position_list(n, start_point, end_point):  # finish
     start_x = start_point[0]
     start_y = start_point[1]
 
@@ -348,7 +350,9 @@ def get_position_list(n, start_point, end_point):
 
     return p_list
 
+
 """ ******************** velocity (mm/s) ******************** """
+
 
 def get_velocity_list(n):  # finish
     v_list = []
@@ -359,7 +363,7 @@ def get_velocity_list(n):  # finish
     return v_list
 
 
-def get_xy_velocity_list(n, d_x, d_y):  # finish
+def get_xy_velocity_list(n, d_x, d_y):
     v_interval = 100 / n
     
     x_list = []
@@ -590,7 +594,8 @@ def move(start_point, end_point, velo_acc_x_mat, velo_acc_y_mat, time_list):
             p_x = p_list[i][0]
             p_y = p_list[i][1]
             print(p_x, p_y)
-            
+
+            # 建议还是用时间等待比较合适
             while X_Motor.get_actual_position() <= p_x and Y_Motor.get_actual_position() <= p_y:
                 # print("position: " + str(X_Motor.get_actual_position()) + ", " + str(Y_Motor.get_actual_position()))
                 if abs(X_Motor.get_actual_position() - end_x) <= 10 or abs(Y_Motor.get_actual_position() - end_y) <= 10:
