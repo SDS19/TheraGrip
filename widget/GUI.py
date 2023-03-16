@@ -9,7 +9,7 @@ class MainWindow(QWidget):
     def __init__(self, node_1, node_2, x_axis, y_axis):
         super().__init__()
         self.setWindowTitle("TheraGrip")
-        # self.showMaximized()
+        # self.setGeometry(0, 0, 1800, 720)
 
         layout = QHBoxLayout(self)
         self.setLayout(layout)
@@ -35,11 +35,11 @@ class TabWidget(QTabWidget):
 
         self.user_tab = QWidget()
         self.developer_tab = QWidget()
-        self.report_tab = QWidget()
+        # self.report_tab = QWidget()
 
         self.addTab(self.user_tab, 'User')
         self.addTab(self.developer_tab, 'Developer')
-        self.addTab(self.report_tab, 'Report')
+        # self.addTab(self.report_tab, 'Report')
 
         user_layout = QVBoxLayout()
         self.user_group = UserGroup(node_1, node_2, x_axis, y_axis)

@@ -185,12 +185,20 @@ class D1:
         self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 255, 0, 0, 0, 0, 4, v_list[0], v_list[1], v_list[2], v_list[3]]))
 
     def profile_velocity_mode(self, velo, acc):
+        v_byte = self.to_byte(velo)
+        print(v_byte)
+        a_byte = self.to_byte(acc)
+        print(a_byte)
+
         self.mode(3)
         self.command(self.enableOperation_array)
-        a_byte = self.to_byte(acc)
+        
+        # 6083h Profile Acceleration; 6084h Profile Deceleration
         self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 131, 0, 0, 0, 0, 4, a_byte[0], a_byte[1], a_byte[2], a_byte[3]]))
         self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 132, 0, 0, 0, 0, 4, a_byte[0], a_byte[1], a_byte[2], a_byte[3]]))
-        v_byte = self.to_byte(velo)
         self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 255, 0, 0, 0, 0, 4, v_byte[0], v_byte[1], v_byte[2], v_byte[3]]))
+
+        
+        
 
 
