@@ -287,17 +287,12 @@ class Motor:
     # 607A Target Position
     # Setzen sie einer Zielposition auf den Wert 150 mm (Byte 19 = 0; Byte 20 = 0; Byte 21 = 0; Byte 22 = 0)
     # Set target position to 0mm (Byte 19 = 0; Byte 20 = 0; Byte 21 = 0; Byte 22 = 0)
-
         posi_list = self.convertToFourByte(posi)
         self.sendCommand(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 122, 0, 0, 0, 0, 4, posi_list[0], posi_list[1], posi_list[2], posi_list[3]]))
-   
-        
     # Startbefehl zur Bewegung des Motors über Bit 4
     # Set Bit 4 true to excecute the movoment of the motor
         self.sendCommand(bytearray([0, 0, 0, 0, 0, 15, 1, 43, 13, 1, 0, 0, 96, 64, 0, 0, 0, 0, 2, 31, 0]))
-        
         time.sleep(0.1)
-
         while (self.sendCommand(self.status_array) != [0, 0, 0, 0, 0, 15, 1, 43, 13, 0, 0, 0, 96, 65, 0, 0, 0, 0, 2, 39, 22]
                 and self.sendCommand(self.status_array) != [0, 0, 0, 0, 0, 15, 1, 43, 13, 0, 0, 0, 96, 65, 0, 0, 0, 0, 2, 8, 22]):
             break

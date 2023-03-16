@@ -1,15 +1,14 @@
 import math
-import struct
-
 import numpy as np
+import similaritymeasures
 from matplotlib import pyplot as plt
-# import similaritymeasures
 
 
-""" Function: human mode
-    Source: Nils Hoppe's paper P118
+""" 
+    Title: Nils Hoppe's paper P118 Geschwindigkeitsverlauf
     Author: Yukai 
-    Datum: 12.03.2023 """
+    Date: 16.03.2023 
+"""
 
 
 def mod_velocity_curve(x):
@@ -46,7 +45,7 @@ def show_interpolation_curve(n, start_point, end_point):
     t_list = get_time_list(v_list, start_point, end_point)
     a_list = get_acceleration_list(v_list, t_list)
 
-    interpolation_plot(p_list, v_list, a_list, t_list, "velocity", "modified velocity curve")
+    interpolation_plot(p_list, v_list, a_list, t_list, "Velocity (mm/s)", "Velocity Curve with " + str(n) + " interpolation-points")
 
 
 """ ******************** position (mm) ******************** """
@@ -68,7 +67,7 @@ def get_position_list(n, start_point, end_point):
 
     p_list = []
     for i in range(n + 1):
-        position = [round(start_x + i * s_x, 2), round(start_y + i * s_y)]
+        position = [round(start_x + i * s_x, 2), round(start_y + i * s_y, 2)]
         p_list.append(position)
 
     return p_list
@@ -207,42 +206,30 @@ def velocity_plot(v_x, v_y):
     plt.show()
 
 
-# def get_diff(v_x, v_y):
-#     n = len(v_x) - 1
-#     d = int(100 / n)
-#     y1 = get_velocity_list(100)  # len: 101
-#
-#     y2 = get_v_list(v_x, v_y)
-#     print('y2: ', len(y2), y2)
-#
-#     # area = 0
-#     # abs_area = 0
-#     # for i in range(n):
-#     #     a = d * i
-#     #     b = d * (i + 1)
-#     #     diff = np.trapz(y1[a:b], dx=1) - np.trapz(y2[i:i + 2], dx=d)
-#     #     area = area + diff
-#     #     abs_area += abs(diff)
-#     #
-#     # print('area: ' + str(area))
-#     # print('abs_area: ' + str(abs_area))
-#
-#     x1 = np.arange(0, 101, 1)  # [0, 1, ..., 100]
-#     exp_data = np.zeros((101, 2))  # [[x0, y0], [x1, y1] ...]
-#     exp_data[:, 0] = x1
-#     exp_data[:, 1] = y1
-#
-#     x2 = np.arange(0, 101, d)
-#     num_data = np.zeros((len(x2), 2))
-#     num_data[:, 0] = x2
-#     num_data[:, 1] = y2
-#     print(num_data)
-#
-#     diff = similaritymeasures.area_between_two_curves(exp_data, num_data)
-#     print('area: ' + str(diff))
-#
-#     df = similaritymeasures.frechet_dist(exp_data, num_data)
-#     print('Discrete Frechet distance: ' + str(df))
+def get_diff(v_x, v_y):
+    n = len(v_x) - 1
+    d = int(100 / n)
+    y1 = get_velocity_list(100)  # len: 101
+
+    y2 = get_v_list(v_x, v_y)
+    print('y2: ', len(y2), y2)
+
+    x1 = np.arange(0, 101, 1)  # [0, 1, ..., 100]
+    exp_data = np.zeros((101, 2))  # [[x0, y0], [x1, y1] ...]
+    exp_data[:, 0] = x1
+    exp_data[:, 1] = y1
+
+    x2 = np.arange(0, 101, d)
+    num_data = np.zeros((len(x2), 2))
+    num_data[:, 0] = x2
+    num_data[:, 1] = y2
+    print(num_data)
+
+    diff = similaritymeasures.area_between_two_curves(exp_data, num_data)
+    print('area: ' + str(diff))
+
+    df = similaritymeasures.frechet_dist(exp_data, num_data)
+    print('Discrete Frechet distance: ' + str(df))
 
 
 # def diff_5(v_x, v_y):
@@ -383,6 +370,8 @@ if __name__ == '__main__':
     start_point = [0, 0]
     end_point = [350, 250]
 
+    show_interpolation_curve(n, start_point, end_point)
+
     d_x = abs(end_point[0] - start_point[0])
     d_y = abs(end_point[1] - start_point[1])
 
@@ -419,8 +408,6 @@ if __name__ == '__main__':
     print(x_matrix)
 
 
-
-    # show_interpolation_curve(n, start_point, end_point)
 
     i = -100
     # print(to_four_byte(i))
