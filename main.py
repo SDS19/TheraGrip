@@ -1,5 +1,4 @@
 import canopen
-
 from controller.ArmController import D1
 from controller.HandController import Drive
 from widget.GUI import *
