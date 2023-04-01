@@ -184,6 +184,7 @@ class D1:
         self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 132, 0, 0, 0, 0, 4, v_list[4], v_list[5], v_list[6], v_list[7]]))
         self.command(bytearray([0, 0, 0, 0, 0, 17, 1, 43, 13, 1, 0, 0, 96, 255, 0, 0, 0, 0, 4, v_list[0], v_list[1], v_list[2], v_list[3]]))
 
+    # need to be optimized
     def profile_velocity_mode(self, velo, acc):
         v_byte = self.to_byte(velo)
         print(v_byte)
