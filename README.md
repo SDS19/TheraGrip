@@ -1,3 +1,5 @@
+TheraGrip
+
 ![](widget/icon/Bildschirmfoto vom 2023-03-09 14-37-39.png)
 
 main.py is the entry of the whole system
