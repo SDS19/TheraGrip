@@ -1,9 +1,8 @@
-import math
-
-import numpy as np
-
 from widget.IOChart import *
+from widget.VelocityCurve import *
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+
+n = 5  # number of interpolation point
 
 
 class ArmMoveThread(QThread):
@@ -19,20 +18,30 @@ class ArmMoveThread(QThread):
         self.times = times
 
         self.factor = x_axis.SI_unit_factor
+        
+        self.stop = False
+        self.shut_down = False
 
     finish = pyqtSignal()
 
     def run(self):        
         v = 80 if len(self.velocity) == 0 else int(self.velocity)
-        n = 1 if len(self.times) == 0 else int(self.times)
+        times = 1 if len(self.times) == 0 else int(self.times)
 
-        for i in range(int(n)):
+        for i in range(int(times)):            
             self.x_axis.profile_position_mode(v, 80, self.p1[0])
             self.y_axis.profile_position_mode(v, 80, self.p1[1])
             while self.x_axis.get_actual_velocity() != 0:
                 time.sleep(0.1)
             while self.y_axis.get_actual_velocity() != 0:
                 time.sleep(0.1)
+                
+            if self.stop or self.shut_down:
+                break
+                
+            # define the waiting time before movement
+#             time.sleep(3)
+#             print("forward wait: 3 s")
 
             self.x_axis.profile_position_mode(80, 80, self.p2[0])
             self.y_axis.profile_position_mode(80, 80, self.p2[1])
@@ -41,132 +50,165 @@ class ArmMoveThread(QThread):
             while self.y_axis.get_actual_velocity() != 0:
                 time.sleep(0.1)
                 
+            if self.stop or self.shut_down:
+                break
+                
+#             time.sleep(3)
+#             print("backward wait: 3 s")
+
+        if self.shut_down:
+            return
+                
         self.x_axis.profile_position_mode(v, 80, self.p1[0])
         self.y_axis.profile_position_mode(v, 80, self.p1[1])
         while self.x_axis.get_actual_velocity() != 0:
             time.sleep(0.1)
         while self.y_axis.get_actual_velocity() != 0:
             time.sleep(0.1)
+            
+        
+        # self.move_1()
+#         self.x_axis.profile_velocity_mode(100, 100)
+        
+#         velo_x_mat = convertVeloListToByte(velo_x_list, forward_x)
+#         velo_y_mat = convertVeloListToByte(velo_y_list, forward_y)
+#         
+#         acc_x_mat = 
+#         acc_y_mat = convertAccListToByte(acc_y_list)
+#         
+#         velo_acc_x_mat = conVeloAccMat(velo_x_mat, acc_x_mat)
+#         velo_acc_y_mat = conVeloAccMat(velo_y_mat, acc_y_mat)
+#         
+#         self.x_axis.ProfVeloMode(velo_acc_x_mat)
 
         self.finish.emit()
 
-    def to_byte(self, x):
-        return list(int(x * self.factor).to_bytes(4, byteorder='little', signed=True))
+    """ ********** optimized start ********** """
 
-    def convertVeloListToByte(self, velo_list, forward):
-        row = len(velo_list)
-        velo_mat = np.arange(row * 4).reshape(row, 4)
-        if forward == False:
-            for i in range(0, row):
-                velo_mat[i] = self.to_byte(velo_list[i])
-        if forward == True:
-            for i in range(0, row):
-                velo_mat[i] = self.to_byte(velo_list[i])
-        velo_mat[0] = [0, 0, 0, 0]
-        velo_mat[row - 1] = [0, 0, 0, 0]
-        return velo_mat
+    def move_1(self):        
+        p_list = get_position_list(n, self.p1, self.p2)
+        print("position: " + str(p_list))
 
-    def get_velocity_byte_list(self, v_list):
-        v_byte_list = []
-        for v in v_list:
-            v_byte_list.append(self.to_byte(v))
-        return v_byte_list
+        xyv_list = get_xy_velocity_list(n, self.p1, self.p2)
+        v_x_list = xyv_list[0]
+        v_y_list = xyv_list[1]
+        v_list = xyv_list[2]
+        print("velocity: " + str(v_list))
+        
+        t_list = get_time_list(v_list, self.p1, self.p2)
 
+        a_x_list = get_acceleration_list(v_x_list, t_list)
+        a_y_list = get_acceleration_list(v_y_list, t_list)
+        print("acc: " + str(a_x_list))
 
-""" ******************** Nils Hoppe human mode 14.02.2023 ~ 17.02.2023 ******************** """
+        for i in range(1, n + 1):
+            print("i: " + str(i))
+            
+            p = p_list[i]
+            p_x = p[0]
+            p_y = p[1]
+            print("p: " + str(p))
 
+            v_x = v_x_list[i]
+            v_y = v_y_list[i]
+            print("v_x: " + str(v_x))
+            print("v_y: " + str(v_y))
 
-# Nils Hoppe paper P118
-def mod_velocity_curve(x):
-    y = -5.83397691012945e-14 * pow(x, 9) + 4.01458396693356e-11 * pow(x, 8) - 9.62482037096911e-9 * pow(x, 7) + \
-           1.06977262917339e-6 * pow(x, 6) - 5.68239363212274e-5 * pow(x, 5) + 0.00125022968775769 * pow(x, 4) - \
-           0.0124822800434351 * pow(x, 3) + 0.531322885004075 * pow(x, 2) - 0.240497493514033 * x + 0.234808880863676
-    return y / 2
+            a_x = a_x_list[i - 1]
+            a_y = a_y_list[i - 1]
+            print("a_x: " + str(a_x))
+            print("a_y: " + str(a_y))
+            
+            self.x_axis.profile_position_mode(v_x, a_x, p_x)
+            self.y_axis.profile_position_mode(v_y, a_y, p_y)
 
+#             self.x_axis.profile_velocity_mode(v_x, a_x)
+#             self.y_axis.profile_velocity_mode(v_y, a_y)
 
-# n: sample number
-def show_mod_velocity_curve(n):
-    single_plot(get_velocity_list(n), "velocity", "modified velocity curve")
+            while self.x_axis.get_actual_position() * self.factor <= p_x and self.y_axis.get_actual_position() * self.factor <= p_y:
+                time.sleep(0.01)
 
+    def move_2(self):
+        p_list = get_position_list(n, self.p1, self.p2)
 
-""" ********** volecity list ********** """
+        xyv_list = get_xy_velocity_list(n, self.p1, self.p2)
+        v_x_list = xyv_list[0]
+        v_y_list = xyv_list[1]
+        v_list = xyv_list[2]
 
+        t_list = get_time_list(v_list, self.p1, self.p2)
 
-# get velocity list based on sample number
-def get_velocity_list(n):
-    v_list = []
-    v_interval = 100 / n
-    for i in range(n + 1):  # n+1 => symmetrical
-        v_list.append(round(mod_velocity_curve(i * v_interval)))
-    v_list[-1] = 0  # border condition
-    return v_list
+        a_x_list = get_acceleration_list(v_x_list, t_list)
+        a_y_list = get_acceleration_list(v_y_list, t_list)
 
+        for i in range(1, n):
+            p = p_list[i]
+            p_x = p[0]
+            p_y = p[1]
 
-# get velocity list in x and y axis (x^2 + y^2 = v^2)
-# d_x: distance in x axis; d_y: distance in y axis
-def get_xy_velocity_list(n, d_x, d_y):
-    x_list = []
-    y_list = []
-    v_list = []
-    v_interval = 100 / n
-    for i in range(n + 1):
-        v_list.append(mod_velocity_curve(i * v_interval))
-    v_list[0] = v_list[-1] = 0  # border condition
+            v_x = v_x_list[i]
+            v_y = v_y_list[i]
 
-    deg = math.degrees(math.atan(d_y / d_x))
-    for v in v_list:
-        x_list.append(v * math.cos(math.radians(deg)))
-        y_list.append(v * math.sin(math.radians(deg)))
+            a_x = a_x_list[i - 1]
+            a_y = a_y_list[i - 1]
 
-    return [x_list, y_list, v_list]
+            self.x_axis.profile_velocity_mode(v_x, a_x)
+            self.y_axis.profile_velocity_mode(v_y, a_y)
 
+            while self.x_axis.get_actual_position() * self.factor <= p_x and self.y_axis.get_actual_position() * self.factor <= p_y:
+                time.sleep(0.01)
 
-""" ********** time list ********** """
+        # profile position mode in last segment
+        p_x = self.p2[0]
+        p_y = self.p2[1]
 
+        v_x = v_x_list[-2]
+        v_y = v_y_list[-2]
 
-# time = distance / mean(velocity)
-def get_time_list(d, v_list):
-    d_interval = d / (len(v_list) - 1)
-    t_list = [0] * len(v_list)
-    for i in range(1, len(v_list)):
-        v_mean = v_list[i - 1] + (v_list[i] - v_list[i - 1]) / 2
-        t_list[i] = d_interval / v_mean
-    return t_list
+        a_x = a_x_list[-1]
+        a_y = a_y_list[-1]
 
+        self.x_axis.profile_position_mode(v_x, a_x, p_x)
+        self.y_axis.profile_position_mode(v_y, a_y, p_y)
 
-""" ********** acceleration list ********** """
-
-
-# abs(acceleration) = abs(velocity) / time
-def get_acc_list(v_list, t_list):
-    a_list = [0]
-    for i in range(1, len(v_list)):
-        a_list.append(round(abs(v_list[i] - v_list[i - 1]) / t_list[i]))  # abs
-    return a_list
-
+    """ ********** optimized end ********** """
 
 def to_byte(x):
-    return list(int(x).to_bytes(4, byteorder='little', signed=True))
+    return list(int(x * factor).to_bytes(4, byteorder='little', signed=True))
 
+def negNumToFourByte(num):  # check negative num 23.02
+    byte_list = [255, 255, 255, 255]
+    num = abs(num)
+    byte_list = to_byte(num)
+    for i in range(0, 4):
+        byte_list[i] = 255 - byte_list[i]
+    return byte_list
+    
 def convertVeloListToByte(velo_list, forward):
     row = len(velo_list)
-    velo_mat = np.arange(row * 4).reshape(row, 4)
-    if forward == False:
+    velo_mat = np.arange(row*4).reshape(row, 4)              
+        
+    if forward:
         for i in range(0, row):
-            velo_mat[i] = to_byte(velo_list[i])
-    if forward == True:
+            velo_mat[i] = negNumToFourByte(velo_list[i])
+    else:
         for i in range(0, row):
-            velo_mat[i] = to_byte(velo_list[i])
-    velo_mat[0] = [0, 0, 0, 0]
-    velo_mat[row - 1] = [0, 0, 0, 0]
-    return velo_mat
+            velo_mat[i] = to_byte(velo_list[i])  
+    
+    velo_mat[0] = [0,0,0,0]
+    velo_mat[row-1] = [0,0,0,0]
 
-
-def get_velocity_byte_list(v_list):
-    v_byte_list = []
-    for v in v_list:
-        v_byte_list.append(to_byte(v))
-    return v_byte_list
+    return velo_mat    
+    
+def convertAccListToByte(acc_list):
+    row = len(acc_list)
+    acc_mat = np.arange(row*4).reshape(row, 4)
+    for i in range(0, row):
+        acc_mat[i] = to_byte(abs(acc_list[i]))
+    return acc_mat
+    
+def conVeloAccMat(velo_mat, acc_mat):
+    return np.hstack((velo_mat, acc_mat))
 
 
 class ArmHomingThread(QThread):
@@ -189,19 +231,16 @@ class ArmHomingThread(QThread):
             self.y_axis.homing(60, 100)
 
 
-class ArmStopThread(QThread):
+class ArmStopThread(QThread):  # finish
     def __init__(self, x_axis, y_axis):
         super().__init__()
         self.x_axis = x_axis
         self.y_axis = y_axis
 
-    def run(self):
-        # stop the current movement
-        # self.x_axis.stop()
-        # self.y_axis.stop()
-
-        self.x_axis.shut_down()
-        self.y_axis.shut_down()
+    def run(self):  # stop the current movement
+        stop = True
+        self.x_axis.stop()
+        self.y_axis.stop()
 
 
 class ArmInfoThread(QThread):
@@ -228,31 +267,3 @@ class ArmInfoThread(QThread):
         v_y = self.y_axis.get_actual_velocity()
 
         self.update.emit([[f_x, p_x, v_x], [f_y, p_y, v_y]])
-
-
-def checkDirection(s, t):
-    if s >= t:
-        forward = True
-    else:
-        forward = False
-    return forward
-
-
-if __name__ == '__main__':
-    # show_mod_velocity_curve(3)
-    start_x = 250
-    start_y = 250
-
-    target_x = 150
-    target_y = 100
-
-    d_x = abs(start_x - target_x)
-    d_y = abs(start_y - target_y)
-
-    forward_x = checkDirection(start_x, target_x)
-    forward_y = checkDirection(start_y, target_y)
-
-    y = get_velocity_list(10)
-
-
-

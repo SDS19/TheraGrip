@@ -51,7 +51,7 @@ class HandMoveThread(QThread):
     def movement(self):
         self.node_1.set_profile_position_mode()
         self.node_2.set_profile_position_mode()
-        self.node_2.set_negative_move_direction()
+        # self.node_2.set_negative_move_direction()
 
         for i in range(0, int(self.node_1.cycle)):
             self.node_1.move_to_target_position(self.node_1.start_position)
