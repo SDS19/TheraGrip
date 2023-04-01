@@ -8,7 +8,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TheraGrip")
-        self.setGeometry(0, 0, 1800, 720)
+        # self.setGeometry(0, 0, 1800, 720)
 
         layout = QHBoxLayout(self)
         self.setLayout(layout)
@@ -22,7 +22,7 @@ class MainWindow(QWidget):
         tab_layout.addWidget(user_bar)
         tab_layout.addWidget(tab_widget)
 
-        layout.addWidget(UnityWidget())
+        # layout.addWidget(UnityWidget())
         layout.addLayout(tab_layout)
 
         self.show()
@@ -34,11 +34,11 @@ class TabWidget(QTabWidget):
 
         self.user_tab = QWidget()
         self.developer_tab = QWidget()
-        self.report_tab = QWidget()
+        # self.report_tab = QWidget()
 
         self.addTab(self.user_tab, 'User')
         self.addTab(self.developer_tab, 'Developer')
-        self.addTab(self.report_tab, 'Report')
+        # self.addTab(self.report_tab, 'Report')
 
         user_layout = QVBoxLayout()
         self.user_group = UserGroup()
@@ -129,6 +129,7 @@ class DevGroup(QWidget):
         return layout
 
     def user_change_slot(self, username):
+        print("dev group: " + username)
         self.hand_dev.user_changed_slot(username)
         self.arm_dev.user_changed_slot(username)
 
