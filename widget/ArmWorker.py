@@ -27,6 +27,25 @@ class ArmMoveThread(QThread):
     def run(self):        
         v = 80 if len(self.velocity) == 0 else int(self.velocity)
         times = 1 if len(self.times) == 0 else int(self.times)
+        
+#         start_x = self.p1[0]
+#         start_y = self.p1[1]
+#         
+#         end_x = self.p2[0]
+#         end_y = self.p2[1]
+#         
+#         v_a_matrix = self.get_list(n, [start_x, start_y], [end_x, end_y])
+#         
+#         for i in range(times):
+#             print("start point: " + str(start_x) + ', '+ str(start_y))
+#             self.x_axis.profile_position_mode(80, 80, start_x)
+#             self.y_axis.profile_position_mode(80, 80, start_x)
+#                         
+#             while self.x_axis.get_actual_velocity() != 0 or self.y_axis.get_actual_velocity() != 0:
+#                 time.sleep(0.1)
+#                     
+#             print("target point: " + str(end_x) + ', '+ str(end_y))
+#             self.move(self.p1, self.p2, v_a_matrix[0], v_a_matrix[1])
 
         for i in range(int(times)):            
             self.x_axis.profile_position_mode(v, 80, self.p1[0])
@@ -39,7 +58,7 @@ class ArmMoveThread(QThread):
             if self.stop or self.shut_down:
                 break
                 
-            # define the waiting time before movement
+            # define the waiting time between movement
 #             time.sleep(3)
 #             print("forward wait: 3 s")
 
@@ -65,25 +84,208 @@ class ArmMoveThread(QThread):
             time.sleep(0.1)
         while self.y_axis.get_actual_velocity() != 0:
             time.sleep(0.1)
-            
-        
-        # self.move_1()
-#         self.x_axis.profile_velocity_mode(100, 100)
-        
-#         velo_x_mat = convertVeloListToByte(velo_x_list, forward_x)
-#         velo_y_mat = convertVeloListToByte(velo_y_list, forward_y)
-#         
-#         acc_x_mat = 
-#         acc_y_mat = convertAccListToByte(acc_y_list)
-#         
-#         velo_acc_x_mat = conVeloAccMat(velo_x_mat, acc_x_mat)
-#         velo_acc_y_mat = conVeloAccMat(velo_y_mat, acc_y_mat)
-#         
-#         self.x_axis.ProfVeloMode(velo_acc_x_mat)
+
 
         self.finish.emit()
+        
+    """ ******************** to_byte ******************** """
 
+    def to_byte(self, x):  # finish
+        return list(int(x * self.factor).to_bytes(4, byteorder='little', signed=True))
+
+
+    def neg_to_byte(self, num):  # check negative num 23.02
+        byte_list = self.to_byte(abs(num))
+        for i in range(4):
+            byte_list[i] = 255 - byte_list[i]
+        return byte_list
+
+    def v_to_byte(self, v_list, forward):  # finish
+        row = len(v_list)
+        v_mat = np.arange(row * 4).reshape(row, 4)
+    
+        for i in range(0, row):
+            if forward:
+                v_mat[i] = self.neg_to_byte(v_list[i])
+            else:
+                v_mat[i] = self.to_byte(v_list[i])
+    
+        v_mat[0] = [0, 0, 0, 0]
+        v_mat[row-1] = [0,0,0,0]
+
+        return v_mat
+
+
+    def a_to_byte(self, a_list):  # finish
+        row = len(a_list)
+        a_mat = np.arange(row * 4).reshape(row, 4)
+        for i in range(0, row):
+            a_mat[i] = self.to_byte(abs(a_list[i]))
+        return a_mat
+    
+    def get_list(self, n, start_point, end_point):
+        start_x = start_point[0]
+        start_y = start_point[1]
+
+        end_x = end_point[0]
+        end_y = end_point[1]
+    
+        d_x = abs(end_x - start_x)
+        d_y = abs(end_y - start_y)
+    
+        forward_x = direction(start_x, end_x)
+        forward_y = direction(start_y, end_y)
+    
+        v_x_list = []
+        v_y_list = []
+    
+        if d_x != 0 and d_y != 0:
+            (v_x_list, v_y_list, v_list) = get_xy_velocity_list(n, d_x, d_y)
+
+            t_x_list = get_time_list(d_x, n, v_x_list)
+            t_y_list = get_time_list(d_y, n, v_y_list)
+
+            a_x_list = get_acceleration_list(t_x_list, v_x_list)
+            a_y_list = get_acceleration_list(t_y_list, v_y_list)
+    
+#         time_n_list = calcNewCycleList(t_x_list, t_y_list)
+
+            v_x_byte = self.v_to_byte(v_x_list, forward_x)
+            v_y_byte = self.v_to_byte(v_y_list, forward_y)
+        
+            a_x_byte = self.a_to_byte(a_x_list)
+            a_y_byte = self.a_to_byte(a_y_list)
+        
+            v_a_x_byte = conVeloAccMat(v_x_byte, a_x_byte)
+            v_a_y_byte = conVeloAccMat(v_y_byte, a_y_byte)
+
+#         op_time_n_list = opCycleList(time_n_list)
+
+        if d_y == 0.0:
+            v_x_list = get_velocity_list(n)
+            v_y_list = [0] * len(v_x_list)
+            v_list = v_x_list
+        
+            t_x_list = get_time_list(d_x, n, v_x_list)
+            a_x_list = get_acceleration_list(t_x_list, v_x_list)
+        
+            v_x_byte = self.v_to_byte(v_x_list, forward_x)
+            a_x_byte = self.a_to_byte(a_x_list)
+
+            v_a_x_byte = conVeloAccMat(v_x_byte, a_x_byte)
+            v_a_y_byte = []
+
+#         time_n_list = t_x_list
+# 
+#         op_time_n_list = opCycleList(time_n_list)
+
+        if d_x == 0.0:
+            v_y_list = get_velocity_list(n)
+            v_x_list = [0] * len(v_y_list)
+            v_list = v_y_list
+
+            t_y_list = get_time_list(d_y, n, v_y_list)
+            a_y_list = get_acceleration_list(t_y_list, v_y_list)
+        
+            v_y_byte = self.v_to_byte(v_y_list, forward_y)
+            a_y_byte = self.a_to_byte(a_y_list)
+
+            v_a_y_byte = conVeloAccMat(v_y_byte, a_y_byte)
+            v_a_x_byte = []
+
+#         time_n_list = t_y_list
+#         op_time_n_list = opCycleList(time_n_list)
+
+        return [v_a_x_byte, v_a_y_byte]
+    
+    
     """ ********** optimized start ********** """
+    
+    def move(self, start_point, end_point, v_a_x_mat, v_a_y_mat):
+        start_x = start_point[0]
+        start_y = start_point[1]
+        end_x = end_point[0]
+        end_y = end_point[1]
+
+        d_x = end_x - start_x
+        d_y = end_y - start_y
+        print("d_x: " + str(d_x))
+        print("d_y: " + str(d_y))
+    
+        p_list = get_position_list(n, start_point, end_point)
+    
+        if d_x != 0.0 and d_y != 0.0:
+            for i in range(1, n + 1):            
+                self.x_axis.profile_velocity_mode(v_a_x_mat[i])
+                self.y_axis.profile_velocity_mode(v_a_y_mat[i])
+            
+                p_x = p_list[i][0]
+                p_y = p_list[i][1]
+            
+                if d_x >= 0 and d_y >= 0:
+                    print("+, +")
+                    while self.x_axis.get_actual_position() < p_x and self.y_axis.get_actual_position() < p_y: 
+                        self.position_condition(10, end_x, end_y)
+                elif d_x < 0 and d_y >= 0:
+                    print("-, +")
+                    while self.x_axis.get_actual_position() > p_x and self.y_axis.get_actual_position() < p_y:
+                        self.position_condition(10, end_x, end_y)
+                elif d_x >= 0 and d_y < 0:
+                    print("+, -")
+                    while self.x_axis.get_actual_position() < p_x and self.y_axis.get_actual_position() > p_y:
+                        self.position_condition(10, end_x, end_y)
+                elif d_x < 0 and d_y < 0:
+                    print("-,-")
+                    while self.x_axis.get_actual_position() > p_x and self.y_axis.get_actual_position() > p_y:
+                        self.position_condition(10, end_x, end_y)
+        
+            print("Stop Position: " + str(self.x_axis.get_actual_position()) + ", " + str(self.y_axis.get_actual_position()))
+
+        if d_x != 0.0 and d_y == 0.0:
+            for i in range(1, n + 1):
+                self.x_axis.profile_velocity_mode(v_a_x_mat[i])
+            
+                p_x = p_list[i][0]
+            
+                if d_x >= 0:
+                    print("+x")
+                    while self.x_axis.get_actual_position() < p_x:
+                        if abs(self.x_axis.get_actual_position() - end_x) <= 20:
+                            self.x_axis.profile_position_mode(100, 100, end_x)
+                elif d_x < 0:
+                    print("-x")
+                    while self.x_axis.get_actual_position() > p_x:
+                        if abs(self.x_axis.get_actual_position() - end_x) <= 20:
+                            self.x_axis.profile_position_mode(100, 100, end_x)
+                
+            print("Stop Position: " + str(self.x_axis.get_actual_position()) + ", " + str(self.y_axis.get_actual_position()))
+
+        if d_x == 0.0 and d_y != 0.0:
+            for i in range(1, n + 1):
+                self.y_axis.profile_velocity_mode(v_a_y_mat[i])
+            
+                p_y = p_list[i][1]
+            
+                if d_y >= 0:
+                    print("+y")
+                    while self.y_axis.get_actual_position() < p_y:
+                        if abs(self.y_axis.get_actual_position() - end_y) <= 10:
+                            self.y_axis.profile_position_mode(100, 100, end_y)
+                elif d_y < 0:
+                    print("-y")
+                    while self.y_axis.get_actual_position() > p_y:
+                        print(p_y)
+                        if abs(self.y_axis.get_actual_position() - end_y) <= 10:
+                            self.y_axis.profile_position_mode(100, 100, end_y)
+                        
+            print("Stop Position: " + str(self.x_axis.get_actual_position()) + ", " + str(self.y_axis.get_actual_position()))
+
+    def position_condition(self, distance, end_x, end_y):
+        if abs(self.x_axis.get_actual_position() - end_x) <= distance and abs(self.y_axis.get_actual_position() - end_y) <= distance:
+            print("End Position: " + str(end_x) + ", " + str(end_y))
+            self.x_axis.profile_position_mode(100, 100, end_x)
+            self.y_axis.profile_position_mode(100, 100, end_y)
+        time.sleep(0.01)
 
     def move_1(self):        
         p_list = get_position_list(n, self.p1, self.p2)
@@ -118,97 +320,23 @@ class ArmMoveThread(QThread):
             a_y = a_y_list[i - 1]
             print("a_x: " + str(a_x))
             print("a_y: " + str(a_y))
-            
-            self.x_axis.profile_position_mode(v_x, a_x, p_x)
-            self.y_axis.profile_position_mode(v_y, a_y, p_y)
-
-#             self.x_axis.profile_velocity_mode(v_x, a_x)
-#             self.y_axis.profile_velocity_mode(v_y, a_y)
-
-            while self.x_axis.get_actual_position() * self.factor <= p_x and self.y_axis.get_actual_position() * self.factor <= p_y:
-                time.sleep(0.01)
-
-    def move_2(self):
-        p_list = get_position_list(n, self.p1, self.p2)
-
-        xyv_list = get_xy_velocity_list(n, self.p1, self.p2)
-        v_x_list = xyv_list[0]
-        v_y_list = xyv_list[1]
-        v_list = xyv_list[2]
-
-        t_list = get_time_list(v_list, self.p1, self.p2)
-
-        a_x_list = get_acceleration_list(v_x_list, t_list)
-        a_y_list = get_acceleration_list(v_y_list, t_list)
-
-        for i in range(1, n):
-            p = p_list[i]
-            p_x = p[0]
-            p_y = p[1]
-
-            v_x = v_x_list[i]
-            v_y = v_y_list[i]
-
-            a_x = a_x_list[i - 1]
-            a_y = a_y_list[i - 1]
 
             self.x_axis.profile_velocity_mode(v_x, a_x)
             self.y_axis.profile_velocity_mode(v_y, a_y)
 
-            while self.x_axis.get_actual_position() * self.factor <= p_x and self.y_axis.get_actual_position() * self.factor <= p_y:
+            while self.x_axis.get_actual_position() <= p_x and self.y_axis.get_actual_position() <= p_y:
                 time.sleep(0.01)
 
-        # profile position mode in last segment
-        p_x = self.p2[0]
-        p_y = self.p2[1]
-
-        v_x = v_x_list[-2]
-        v_y = v_y_list[-2]
-
-        a_x = a_x_list[-1]
-        a_y = a_y_list[-1]
-
-        self.x_axis.profile_position_mode(v_x, a_x, p_x)
-        self.y_axis.profile_position_mode(v_y, a_y, p_y)
 
     """ ********** optimized end ********** """
 
-def to_byte(x):
-    return list(int(x * factor).to_bytes(4, byteorder='little', signed=True))
 
-def negNumToFourByte(num):  # check negative num 23.02
-    byte_list = [255, 255, 255, 255]
-    num = abs(num)
-    byte_list = to_byte(num)
-    for i in range(0, 4):
-        byte_list[i] = 255 - byte_list[i]
-    return byte_list
-    
-def convertVeloListToByte(velo_list, forward):
-    row = len(velo_list)
-    velo_mat = np.arange(row*4).reshape(row, 4)              
-        
-    if forward:
-        for i in range(0, row):
-            velo_mat[i] = negNumToFourByte(velo_list[i])
-    else:
-        for i in range(0, row):
-            velo_mat[i] = to_byte(velo_list[i])  
-    
-    velo_mat[0] = [0,0,0,0]
-    velo_mat[row-1] = [0,0,0,0]
+def conVeloAccMat(v_byte, a_byte):
+        return np.hstack((v_byte, a_byte))
 
-    return velo_mat    
-    
-def convertAccListToByte(acc_list):
-    row = len(acc_list)
-    acc_mat = np.arange(row*4).reshape(row, 4)
-    for i in range(0, row):
-        acc_mat[i] = to_byte(abs(acc_list[i]))
-    return acc_mat
-    
-def conVeloAccMat(velo_mat, acc_mat):
-    return np.hstack((velo_mat, acc_mat))
+
+def direction(start, end):
+    return True if start >= end else False
 
 
 class ArmHomingThread(QThread):
@@ -238,7 +366,6 @@ class ArmStopThread(QThread):  # finish
         self.y_axis = y_axis
 
     def run(self):  # stop the current movement
-        stop = True
         self.x_axis.stop()
         self.y_axis.stop()
 

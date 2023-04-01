@@ -1,6 +1,6 @@
 import sys
-from PyQt5.Qt import *
 from widget.ArmWorker import *
+from widget.HandWorker import *
 from widget.UserWidget import UserHistory
 
 test = False
@@ -104,7 +104,6 @@ class ArmUser(QWidget):
         
         self.list()
         self.real_time_slot()
-
         self.arm_move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
         self.arm_move_worker.finish.connect(self.save_record_index)
         self.arm_move_worker.start()
@@ -292,12 +291,17 @@ class ArmDev(QWidget):
             self.show()
             print("test mode")
     else:
-        def __init__(self, x_axis, y_axis):
+        def __init__(self, x_axis, y_axis, node_1, node_2):
             super().__init__()
             self.username = 'demo'
 
             self.x_axis = x_axis
             self.y_axis = y_axis
+            
+            self.node_1 = node_1
+            self.node_2 = node_2
+            
+            self.sync = True
 
             self.list()
             self.init()
@@ -449,9 +453,17 @@ class ArmDev(QWidget):
             self.list()  # clear old record
             self.real_time_slot()
             
-            self.arm_move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
-            self.arm_move_worker.finish.connect(self.save_record_index)
-            self.arm_move_worker.start()
+            if self.sync:
+                # self.hand_move_worker = HandMoveThread(self.node_1, self.node_2)
+                # self.hand_move_worker.start()
+
+                self.arm_move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
+                self.arm_move_worker.finish.connect(self.save_record_index)
+                self.arm_move_worker.start()
+            else:
+                self.arm_move_worker = ArmMoveThread(self.x_axis, self.y_axis, p1, p2, velocity, times)
+                self.arm_move_worker.finish.connect(self.save_record_index)
+                self.arm_move_worker.start()
         else:
             QMessageBox.information(self, "Error!", "Please enter correct range value: (0~350), (0~250)")
             
