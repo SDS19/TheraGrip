@@ -272,16 +272,16 @@ class HandUser(QWidget):
         self.btn_enable(False)
         self.config()
         
-        self.worker = HandMoveThread(self.node_1, self.node_2)
-        self.worker.finished.connect(lambda: self.btn_enable(True))
-        self.worker.start()      
+        self.hand_move_worker = HandMoveThread(self.node_1, self.node_2)
+        self.hand_move_worker.finished.connect(lambda: self.btn_enable(True))
+        self.hand_move_worker.start()      
 
     def stop_training_slot(self):  # finish
         self.btn_enable(True)
-        
-        self.worker = HandStopThread(self.node_1, self.node_2)
-        self.worker.finished.connect(lambda: self.btn_enable(False))
-        self.worker.start()
+        self.hand_stop_worker = HandStopThread(self.node_1, self.node_2)
+        self.hand_move_worker.stop = True
+        self.hand_stop_worker.finished.connect(lambda: self.btn_enable(False))
+        self.hand_stop_worker.start()
     
 
 class HandDev(QWidget):
@@ -638,23 +638,13 @@ class HandDev(QWidget):
         layout.addWidget(save_btn, 9, 3)
 
     def start_slot(self):
-        self.worker = HandMoveThread(self.node_1, self.node_2)
-        self.worker.start()
-        # self.worker.finished.connect(self.move_finished_event)
-
-    def move_finished_event(self):  # need to be fixed
-        print(len(self.current_1))
-        print(len(self.current_2))
-
-        print(len(self.position_1))
-        print(len(self.position_2))
-
-        print(len(self.velocity_1))
-        print(len(self.velocity_2))
+        self.hand_move_worker = HandMoveThread(self.node_1, self.node_2)
+        self.hand_move_worker.start()
 
     def stop_slot(self):
-        self.worker = HandStopThread(self.node_1, self.node_2)
-        self.worker.start()
+        self.hand_stop_worker = HandStopThread(self.node_1, self.node_2)
+        self.hand_move_worker.stop = True
+        self.hand_stop_worker.start()
 
     def save_slot(self):
         write_user_log(self.username, 'hand', 'current', self.current_1)

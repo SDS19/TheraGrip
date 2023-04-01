@@ -2,11 +2,71 @@ import time
 from PyQt5.Qt import *
 
 
+class HandMoveThread(QThread):
+    finished = pyqtSignal()
+    
+    def __init__(self, node_1, node_2):
+        super().__init__()
+        self.node_1 = node_1
+        self.node_2 = node_2
+        
+        self.stop = False
+
+    def run(self):
+        self.movement()
+        self.finished.emit()
+        self.node_1.shut_down()
+        self.node_2.shut_down()
+        self.exec_()
+
+    def movement(self):
+        self.node_1.set_profile_position_mode()
+        self.node_2.set_profile_position_mode()
+        # self.node_2.set_negative_move_direction()
+
+        for i in range(0, int(self.node_1.cycle)):
+            self.node_1.move_to_target_position(self.node_1.start_position)
+            self.node_2.move_to_target_position(self.node_2.start_position)
+            while self.node_2.get_actual_velocity() != 0:
+                time.sleep(0.01)
+            while self.node_1.get_actual_velocity() != 0:
+                time.sleep(0.01)
+                
+            print(self.stop)    
+            if self.stop:
+                break
+
+            self.node_1.move_to_target_position(self.node_1.end_position)
+            self.node_2.move_to_target_position(self.node_2.end_position)
+            while self.node_2.get_actual_velocity() != 0:
+                time.sleep(0.01)
+            while self.node_1.get_actual_velocity() != 0:
+                time.sleep(0.01)
+                
+            if self.stop:
+                break
+
+
+class HandStopThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, node_1, node_2):
+        super().__init__()
+        self.node_1 = node_1
+        self.node_2 = node_2
+
+    def run(self):
+        self.node_1.shut_down()
+        self.node_2.shut_down()
+        self.finished.emit()
+        
+
 class HandInfoThread(QThread):
     def __init__(self, node_1, node_2):
         super().__init__()
         self.node_1 = node_1
         self.node_2 = node_2
+        
 
     update = pyqtSignal(object)
 
@@ -31,53 +91,3 @@ class HandInfoThread(QThread):
         #v_2 = round(data_1[2], 2)
 
         #self.update.emit([[f_1, p_1, v_1], [f_2, p_2, v_2]])
-
-
-class HandMoveThread(QThread):
-    finished = pyqtSignal()
-    
-    def __init__(self, node_1, node_2):
-        super().__init__()
-        self.node_1 = node_1
-        self.node_2 = node_2
-
-    def run(self):
-        self.movement()
-        self.finished.emit()
-        self.node_1.shut_down()
-        self.node_2.shut_down()
-        self.exec_()
-
-    def movement(self):
-        self.node_1.set_profile_position_mode()
-        self.node_2.set_profile_position_mode()
-        # self.node_2.set_negative_move_direction()
-
-        for i in range(0, int(self.node_1.cycle)):
-            self.node_1.move_to_target_position(self.node_1.start_position)
-            self.node_2.move_to_target_position(self.node_2.start_position)
-            while self.node_2.get_actual_velocity() != 0:
-                time.sleep(0.01)
-            while self.node_1.get_actual_velocity() != 0:
-                time.sleep(0.01)
-
-            self.node_1.move_to_target_position(self.node_1.end_position)
-            self.node_2.move_to_target_position(self.node_2.end_position)
-            while self.node_2.get_actual_velocity() != 0:
-                time.sleep(0.01)
-            while self.node_1.get_actual_velocity() != 0:
-                time.sleep(0.01)
-
-
-class HandStopThread(QThread):
-    finished = pyqtSignal()
-
-    def __init__(self, node_1, node_2):
-        super().__init__()
-        self.node_1 = node_1
-        self.node_2 = node_2
-
-    def run(self):
-        self.node_1.shut_down()
-        self.node_2.shut_down()
-        self.finished.emit()
